@@ -13,6 +13,7 @@ import ManagerDashboard from '../pages/ManagerDashboard'
 import AccountManagers from '../pages/AccountManagers'
 import ContactManagement from '../pages/ContactManagement'
 import ContactDetail from '../pages/ContactDetail'
+import ActivitiesPage from '../pages/ActivitiesPage'
 
 // Define routes and which roles can access them.
 // Add your new role to the arrays below as needed.
@@ -28,6 +29,7 @@ export const routes = [
   { path: '/customers/:id/account-profile', element: <AccountProfile />, roles: [ROLES.admin, ROLES.sales, ROLES.manager] },
   { path: '/contacts', element: <ContactManagement />, roles: [ROLES.sales] },
   { path: '/contacts/:id', element: <ContactDetail />, roles: [ROLES.sales] },
+  { path: '/aktivitas', element: <ActivitiesPage />, roles: [ROLES.admin, ROLES.sales] },
   // ECRM workspace is admin-only
   { path: '/ecrm-workspace', element: <EcrmWorkspace />, roles: [ROLES.admin] },
   { path: '/ecrm-workspace/validation', element: <ValidationPage />, roles: [ROLES.admin] },
