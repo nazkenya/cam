@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { FaPlus, FaCalendar, FaList, FaFilter } from 'react-icons/fa'
+import { FaPlus, FaCalendar, FaList, FaFilter, FaBell } from 'react-icons/fa'
 import PageHeader from '../components/ui/PageHeader'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
@@ -64,6 +64,34 @@ export default function ActivitiesPage() {
     )
   }, [activities, searchQuery])
 
+  const notificationStats = useMemo(() => {
+    const now = new Date()
+    return filteredActivities.reduce(
+      (acc, activity) => {
+        if (activity.status?.toLowerCase() === 'completed') {
+          return acc
+        }
+
+        const dateString = activity.time ? `${activity.date}T${activity.time}` : activity.date
+        const activityDate = new Date(dateString)
+        if (Number.isNaN(activityDate.getTime())) {
+          return acc
+        }
+
+        if (activityDate < now) {
+          acc.perluUpdate += 1
+        } else {
+          acc.upcoming += 1
+        }
+
+        return acc
+      },
+      { perluUpdate: 0, upcoming: 0 }
+    )
+  }, [filteredActivities])
+
+  const hasNotifications = notificationStats.perluUpdate > 0 || notificationStats.upcoming > 0
+
   const handleCreateActivity = (newActivity) => {
     const activity = {
       ...newActivity,
@@ -101,6 +129,33 @@ export default function ActivitiesPage() {
         title="Aktivitas"
         subtitle="Kelola dan pantau semua aktivitas sales dan customer engagement"
       />
+
+      {hasNotifications && (
+        <Card className="bg-gradient-to-br from-white to-[#FFE4E6] border border-[#FECACA]">
+          <div className="flex items-start gap-3">
+            <span className="mt-1 text-[#E60012]">
+              <FaBell className="w-5 h-5" />
+            </span>
+            <div className="space-y-1 text-sm text-neutral-700">
+              <p className="text-base font-semibold text-[#B91C1C]">Pengingat Aktivitas</p>
+              {notificationStats.perluUpdate > 0 && (
+                <p>
+                  {notificationStats.perluUpdate} aktivitas berstatus{' '}
+                  <span className="font-semibold text-[#E60012]">Perlu Update</span>. Segera
+                  perbarui catatan atau statusnya.
+                </p>
+              )}
+              {notificationStats.upcoming > 0 && (
+                <p>
+                  {notificationStats.upcoming} aktivitas{' '}
+                  <span className="font-semibold text-[#EA580C]">akan datang</span>. Pastikan
+                  seluruh persiapan telah selesai.
+                </p>
+              )}
+            </div>
+          </div>
+        </Card>
+      )}
 
       <Card className="bg-white">
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">

@@ -11,57 +11,7 @@ import StatsCard from '../components/ui/StatsCard'
 import PageHeader from '../components/ui/PageHeader'
 // Import icons
 import { FaFilter, FaPlus, FaUsers, FaStar, FaBuilding, FaUserAlt } from 'react-icons/fa'
-
-/* -------------------------------------------------------
- * Dummy Data (Replace with your API call)
- * ----------------------------------------------------- */
-const DUMMY_CONTACTS = [
-  {
-    id: 1,
-    name: 'Alia Smith',
-    title: 'Account Executive',
-    company: 'TechCorp Solutions',
-    email: 'alia.smith@techcorp.com',
-    phone: '+1 (555) 123-4567',
-    tag: { text: 'Key Account', variant: 'blue' },
-  },
-  {
-    id: 2,
-    name: 'Budi Hartono',
-    title: 'CTO',
-    company: 'InnovateHub',
-    email: 'budi.h@innovatehub.id',
-    phone: '+62 812 3456 7890',
-    tag: null,
-  },
-  {
-    id: 3,
-    name: 'Catherine Lee',
-    title: 'Procurement Manager',
-    company: 'GlobalLogistics',
-    email: 'c.lee@globallogistics.com',
-    phone: '+1 (555) 987-6543',
-    tag: { text: 'Influencer', variant: 'green' },
-  },
-  {
-    id: 4,
-    name: 'David Kim',
-    title: 'IT Director',
-    company: 'TechCorp Solutions',
-    email: 'david.kim@techcorp.com',
-    phone: '+1 (555) 111-2222',
-    tag: null,
-  },
-  {
-    id: 5,
-    name: 'Eka Putri',
-    title: 'Finance Analyst',
-    company: 'DataWeave',
-    email: 'eka.p@dataweave.co',
-    phone: '+62 811 9876 5432',
-    tag: null,
-  },
-]
+import contactsData from '../data/mockContacts'
 
 /* -------------------------------------------------------
  * Helper Functions for Avatars
@@ -98,9 +48,9 @@ export default function ContactManagementPage() {
 
   // Filtering logic
   const filtered = useMemo(() => {
-    if (!query) return DUMMY_CONTACTS
+    if (!query) return contactsData
     const q = query.toLowerCase()
-    return DUMMY_CONTACTS.filter(
+    return contactsData.filter(
       (c) =>
         c.name.toLowerCase().includes(q) ||
         c.title.toLowerCase().includes(q) ||
@@ -157,7 +107,7 @@ export default function ContactManagementPage() {
 
   // Stats Card Data
   const stats = [
-    { label: 'Total Kontak', value: DUMMY_CONTACTS.length.toLocaleString(), icon: FaUsers },
+    { label: 'Total Kontak', value: contactsData.length.toLocaleString(), icon: FaUsers },
     { label: 'Kontak Penting', value: '3', icon: FaStar }, // Hardcoded example
     { label: 'Perusahaan Terhubung', value: '32', icon: FaBuilding }, // Hardcoded example
   ]

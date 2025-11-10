@@ -116,107 +116,106 @@ export default function ActivityDetailModal({ open, onClose, activity, onUpdate,
         </div>
       }
     >
-      <div className="space-y-6">
-        <div className="flex items-start justify-between">
-          <div>
-            <h2 className="text-xl font-bold text-neutral-800">{activity.title}</h2>
-            <p className="text-neutral-600 mt-1">{activity.topic}</p>
-          </div>
-          {isCompleted ? (
-            <Badge variant="success" className="inline-flex items-center gap-1">
-              <FaCheckCircle className="w-3 h-3" />
-              Selesai
-            </Badge>
-          ) : isPast ? (
-            <Badge variant="warning">Perlu Update</Badge>
-          ) : (
-            <Badge variant="info">Akan Datang</Badge>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          <div className="flex items-center gap-3">
-            <FaCalendar className="w-5 h-5 text-neutral-400" />
+      <div className="space-y-5 text-sm text-neutral-700">
+        <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm space-y-3">
+          <div className="flex items-start justify-between gap-4">
             <div>
-              <div className="text-xs text-neutral-500">Tanggal</div>
-              <div className="font-medium text-neutral-800">
-                {new Date(activity.date).toLocaleDateString('id-ID', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
-              </div>
+              <h2 className="text-xl font-semibold text-neutral-900">{activity.title}</h2>
+              <p className="text-neutral-500 mt-1">{activity.topic}</p>
             </div>
+            {isCompleted ? (
+              <Badge variant="success" className="inline-flex items-center gap-1">
+                <FaCheckCircle className="w-3 h-3" />
+                Selesai
+              </Badge>
+            ) : isPast ? (
+              <Badge variant="warning">Perlu Update</Badge>
+            ) : (
+              <Badge variant="info">Akan Datang</Badge>
+            )}
           </div>
+        </section>
 
-          <div className="flex items-center gap-3">
-            <FaClock className="w-5 h-5 text-neutral-400" />
-            <div>
-              <div className="text-xs text-neutral-500">Waktu</div>
-              <div className="font-medium text-neutral-800">{activity.time}</div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <FaMapMarkerAlt className="w-5 h-5 text-neutral-400" />
-            <div>
-              <div className="text-xs text-neutral-500">Lokasi</div>
-              <div className="font-medium text-neutral-800">{activity.location}</div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <FaTag className="w-5 h-5 text-neutral-400" />
-            <div>
-              <div className="text-xs text-neutral-500">Tipe Aktivitas</div>
-              <div className="font-medium text-neutral-800">{activity.type}</div>
-            </div>
-          </div>
-
-          {activity.withCustomer && activity.customer && (
-            <div className="flex items-center gap-3 col-span-2">
-              <FaBuilding className="w-5 h-5 text-neutral-400" />
+        <section className="rounded-2xl border border-neutral-100 bg-neutral-50/70 p-5 shadow-inner space-y-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Rangkuman Jadwal</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-xl border border-white/60 bg-white p-4 flex gap-3">
+              <FaCalendar className="w-5 h-5 text-neutral-400" />
               <div>
-                <div className="text-xs text-neutral-500">Customer</div>
-                <div className="font-medium text-[#E60012]">{activity.customer}</div>
+                <p className="text-xs uppercase text-neutral-500">Tanggal</p>
+                <p className="font-medium text-neutral-900">
+                  {new Date(activity.date).toLocaleDateString('id-ID', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })}
+                </p>
               </div>
             </div>
-          )}
-
-          {activity.invitees && activity.invitees.length > 0 && (
-            <div className="flex items-start gap-3 col-span-2">
-              <FaUsers className="w-5 h-5 text-neutral-400 mt-1" />
+            <div className="rounded-xl border border-white/60 bg-white p-4 flex gap-3">
+              <FaClock className="w-5 h-5 text-neutral-400" />
               <div>
-                <div className="text-xs text-neutral-500">Peserta</div>
-                <div className="font-medium text-neutral-800">{activity.invitees.join(', ')}</div>
+                <p className="text-xs uppercase text-neutral-500">Waktu</p>
+                <p className="font-medium text-neutral-900">{activity.time}</p>
               </div>
             </div>
-          )}
-        </div>
+            <div className="rounded-xl border border-white/60 bg-white p-4 flex gap-3 sm:col-span-2">
+              <FaMapMarkerAlt className="w-5 h-5 text-neutral-400" />
+              <div>
+                <p className="text-xs uppercase text-neutral-500">Lokasi</p>
+                <p className="font-medium text-neutral-900">{activity.location}</p>
+              </div>
+            </div>
+            <div className="rounded-xl border border-white/60 bg-white p-4 flex gap-3">
+              <FaTag className="w-5 h-5 text-neutral-400" />
+              <div>
+                <p className="text-xs uppercase text-neutral-500">Tipe Aktivitas</p>
+                <p className="font-medium text-neutral-900">{activity.type}</p>
+              </div>
+            </div>
+            {activity.withCustomer && activity.customer && (
+              <div className="rounded-xl border border-white/60 bg-white p-4 flex gap-3 sm:col-span-2">
+                <FaBuilding className="w-5 h-5 text-neutral-400" />
+                <div>
+                  <p className="text-xs uppercase text-neutral-500">Customer</p>
+                  <p className="font-medium text-[#E60012]">{activity.customer}</p>
+                </div>
+              </div>
+            )}
+            {activity.invitees && activity.invitees.length > 0 && (
+              <div className="rounded-xl border border-white/60 bg-white p-4 flex gap-3 sm:col-span-2">
+                <FaUsers className="w-5 h-5 text-neutral-400" />
+                <div>
+                  <p className="text-xs uppercase text-neutral-500">Peserta</p>
+                  <p className="font-medium text-neutral-900">{activity.invitees.join(', ')}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
 
         {activity.description && (
-          <div className="border-t border-neutral-200 pt-4">
-            <h4 className="text-sm font-semibold text-neutral-700 mb-2">Deskripsi</h4>
-            <p className="text-sm text-neutral-600 whitespace-pre-wrap">{activity.description}</p>
-          </div>
+          <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Deskripsi</p>
+            <p className="text-neutral-700 whitespace-pre-wrap leading-relaxed">{activity.description}</p>
+          </section>
         )}
 
         {canAddProofAndMom && (
-          <div className="border-t border-neutral-200 pt-4 space-y-4">
-            <h4 className="text-sm font-semibold text-neutral-700">
-              Upload Bukti & Minutes of Meeting
-            </h4>
-            <p className="text-xs text-neutral-500">
-              Karena aktivitas ini sudah selesai dan melibatkan customer, silakan upload foto bukti dan file MoM
-            </p>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">
-                  <FaImage className="inline mr-2" />
+          <section className="rounded-2xl border border-dashed border-neutral-300 bg-white p-5 shadow-sm space-y-4">
+            <div>
+              <p className="text-sm font-semibold text-neutral-800">Lengkapi Dokumentasi</p>
+              <p className="text-xs text-neutral-500 mt-1">
+                Aktivitas ini membutuhkan bukti dan MoM untuk menandai status selesai.
+              </p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-3 rounded-xl border border-neutral-200 bg-neutral-50 p-4">
+                <div className="flex items-center gap-2 text-sm font-semibold text-neutral-800">
+                  <FaImage className="text-neutral-400" />
                   Foto Bukti (JPG, PNG)
-                </label>
+                </div>
                 <input
                   ref={proofInputRef}
                   type="file"
@@ -234,39 +233,31 @@ export default function ActivityDetailModal({ open, onClose, activity, onUpdate,
                     Pilih Foto
                   </Button>
                 ) : (
-                  <div className="flex items-center gap-3 p-3 bg-neutral-50 rounded-lg border border-neutral-200">
+                  <div className="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white p-3">
                     {proof.type?.startsWith('image/') && (
-                      <img
-                        src={proof.dataUrl}
-                        alt="Proof"
-                        className="w-20 h-20 object-cover rounded-lg"
-                      />
+                      <img src={proof.dataUrl} alt="Proof" className="h-20 w-20 rounded-lg object-cover" />
                     )}
                     <div className="flex-1">
                       <p className="text-sm font-medium text-neutral-800">{proof.name}</p>
-                      <p className="text-xs text-neutral-500">
-                        {(proof.size / 1024).toFixed(2)} KB
-                      </p>
+                      <p className="text-xs text-neutral-500">{(proof.size / 1024).toFixed(2)} KB</p>
                     </div>
-                    <Button
-                      variant="secondary"
-                      onClick={() => proofInputRef.current?.click()}
-                      size="sm"
-                    >
-                      Ganti
-                    </Button>
-                    <Button variant="danger" onClick={() => setProof(null)} size="sm">
-                      Hapus
-                    </Button>
+                    <div className="flex flex-col gap-2">
+                      <Button variant="secondary" size="sm" onClick={() => proofInputRef.current?.click()}>
+                        Ganti
+                      </Button>
+                      <Button variant="danger" size="sm" onClick={() => setProof(null)}>
+                        Hapus
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">
-                  <FaFileAlt className="inline mr-2" />
+              <div className="space-y-3 rounded-xl border border-neutral-200 bg-neutral-50 p-4">
+                <div className="flex items-center gap-2 text-sm font-semibold text-neutral-800">
+                  <FaFileAlt className="text-neutral-400" />
                   Minutes of Meeting (PDF, DOC, DOCX)
-                </label>
+                </div>
                 <input
                   ref={momInputRef}
                   type="file"
@@ -284,69 +275,64 @@ export default function ActivityDetailModal({ open, onClose, activity, onUpdate,
                     Pilih File MoM
                   </Button>
                 ) : (
-                  <div className="flex items-center gap-3 p-3 bg-neutral-50 rounded-lg border border-neutral-200">
-                    <FaFileAlt className="w-10 h-10 text-neutral-400" />
+                  <div className="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white p-3">
+                    <FaFileAlt className="h-10 w-10 text-neutral-400" />
                     <div className="flex-1">
                       <p className="text-sm font-medium text-neutral-800">{mom.name}</p>
-                      <p className="text-xs text-neutral-500">
-                        {(mom.size / 1024).toFixed(2)} KB
-                      </p>
+                      <p className="text-xs text-neutral-500">{(mom.size / 1024).toFixed(2)} KB</p>
                     </div>
-                    <Button
-                      variant="secondary"
-                      onClick={() => momInputRef.current?.click()}
-                      size="sm"
-                    >
-                      Ganti
-                    </Button>
-                    <Button variant="danger" onClick={() => setMom(null)} size="sm">
-                      Hapus
-                    </Button>
+                    <div className="flex flex-col gap-2">
+                      <Button variant="secondary" size="sm" onClick={() => momInputRef.current?.click()}>
+                        Ganti
+                      </Button>
+                      <Button variant="danger" size="sm" onClick={() => setMom(null)}>
+                        Hapus
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>
             </div>
-          </div>
+          </section>
         )}
 
         {isCompleted && (activity.proof || activity.mom) && (
-          <div className="border-t border-neutral-200 pt-4 space-y-4">
-            <h4 className="text-sm font-semibold text-neutral-700">Dokumentasi</h4>
-
-            {activity.proof && (
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">
-                  Foto Bukti
-                </label>
-                <div className="flex items-center gap-3 p-3 bg-neutral-50 rounded-lg border border-neutral-200">
-                  {activity.proof.type?.startsWith('image/') && (
-                    <img
-                      src={activity.proof.dataUrl}
-                      alt="Proof"
-                      className="w-20 h-20 object-cover rounded-lg"
-                    />
-                  )}
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-neutral-800">{activity.proof.name}</p>
+          <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm space-y-4">
+            <div>
+              <p className="text-sm font-semibold text-neutral-800">Dokumentasi</p>
+              <p className="text-xs text-neutral-500 mt-1">File yang telah disimpan untuk aktivitas ini.</p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              {activity.proof && (
+                <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 space-y-3">
+                  <p className="text-xs uppercase text-neutral-500">Foto Bukti</p>
+                  <div className="flex items-center gap-3">
+                    {activity.proof.type?.startsWith('image/') && (
+                      <img
+                        src={activity.proof.dataUrl}
+                        alt="Proof"
+                        className="h-20 w-20 rounded-lg object-cover"
+                      />
+                    )}
+                    <div>
+                      <p className="text-sm font-medium text-neutral-800">{activity.proof.name}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-
-            {activity.mom && (
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">
-                  Minutes of Meeting
-                </label>
-                <div className="flex items-center gap-3 p-3 bg-neutral-50 rounded-lg border border-neutral-200">
-                  <FaFileAlt className="w-10 h-10 text-neutral-400" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-neutral-800">{activity.mom.name}</p>
+              )}
+              {activity.mom && (
+                <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 space-y-3">
+                  <p className="text-xs uppercase text-neutral-500">Minutes of Meeting</p>
+                  <div className="flex items-center gap-3">
+                    <FaFileAlt className="h-10 w-10 text-neutral-400" />
+                    <div>
+                      <p className="text-sm font-medium text-neutral-800">{activity.mom.name}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          </section>
         )}
       </div>
     </Modal>

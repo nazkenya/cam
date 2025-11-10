@@ -16,6 +16,7 @@ import {
   FaCog,
   FaSignOutAlt,
   FaFirefoxBrowser,
+  FaAddressBook
 } from 'react-icons/fa'
 import { useAuth } from '../../auth/AuthContext'
 import { ROLES } from '../../auth/roles'
@@ -35,8 +36,9 @@ const MENU = {
   ],
   [ROLES.sales]: [
     { to: '/customers', label: 'Pelanggan', icon: FaUsers },
-    { to: '/sales-funnel', label: 'Sales Funnel', icon: FaBullhorn },
+    { to: '/contacts', label: 'Kontak', icon: FaAddressBook },
     { to: '/aktivitas', label: 'Aktivitas', icon: FaChartLine },
+    { to: '/sales-funnel', label: 'Sales Funnel', icon: FaBullhorn },
   ],
   [ROLES.viewer]: [
     { to: '/customers', label: 'Pelanggan', icon: FaUsers },

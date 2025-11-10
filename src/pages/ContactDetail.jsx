@@ -1,479 +1,1355 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react' // Import useRef
-import { useParams, useNavigate } from 'react-router-dom'
-
-// --- Reusable UI Components (Assuming you import these) ---
-// Note: These are simplified versions based on your provided components
-// to make this file runnable. You should import your real components.
-
-// Simplified Card (from your file)
-const Card = ({ children, className = '', noPadding = false }) => ( <div className={`rounded-xl border border-neutral-200 bg-white ${className}`}> <div className={noPadding ? '' : 'p-5'}>{children}</div> </div> )
-// Simplified Button (from your file)
-function Button({ children, variant = 'primary', size = 'md', className = '', icon: Icon, ...props }) { const base = 'inline-flex items-center justify-center gap-2 rounded-xl text-sm font-medium transition-colors duration-200 focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed'; const sizes = { sm: 'px-3 py-1.5 text-xs', md: 'px-4 py-2.5 text-sm' }; const variants = { primary: 'bg-[#2C5CC5] text-white hover:bg-[#234AA0] shadow-sm', secondary: 'bg-white border border-neutral-300 text-neutral-800 hover:border-[#2C5CC5] shadow-sm', danger: 'bg-red-500 text-white hover:bg-red-600 shadow-sm' }; return ( <button className={[base, sizes[size] || sizes.md, variants[variant] || variants.primary, className].join(' ').trim()} {...props}> {Icon && <Icon className="h-4 w-4" />} {children} </button> ); }
-// Simplified Badge (Tag)
-const Tag = ({ children, variant = 'neutral', className = '', icon: Icon }) => { const colors = { blue: 'bg-blue-100 text-blue-800', green: 'bg-green-100 text-green-800', yellow: 'bg-yellow-100 text-yellow-800', red: 'bg-red-100 text-red-800', neutral: 'bg-neutral-100 text-neutral-800' }; return ( <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${colors[variant] || colors.neutral} ${className}`}> {Icon && <Icon className="h-3 w-3" />} {children} </span> ) }
-// Simplified DebouncedTextArea
-const DebouncedTextArea = ({ id, value: initialValue, onChange, placeholder, rows, className, disabled = false }) => { const [value, setValue] = useState(initialValue); useEffect(() => { setValue(initialValue) }, [initialValue]); const handleChange = (e) => { setValue(e.target.value); if(onChange) onChange(e.target.value); }; return ( <textarea id={id} value={value} onChange={handleChange} placeholder={placeholder} rows={rows} className={`w-full rounded-xl border border-neutral-300 bg-white p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2C5CC5]/30 read-only:bg-slate-50 read-only:cursor-not-allowed ${className}`} disabled={disabled} readOnly={disabled} /> ) }
-// Simplified Input
-const Input = ({ id, value: initialValue, onChange, placeholder, type = 'text', className = '', icon: Icon, disabled = false }) => { const [value, setValue] = useState(initialValue); useEffect(() => { setValue(initialValue) }, [initialValue]); const handleChange = (e) => { setValue(e.target.value); if(onChange) onChange(e.target.value); }; return ( <div className="relative"><input id={id} type={type} value={value} onChange={handleChange} placeholder={placeholder} className={`w-full rounded-xl border border-neutral-300 bg-white py-2.5 ${Icon ? 'pl-10' : 'pl-4'} pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#2C5CC5]/30 read-only:bg-slate-50 read-only:cursor-not-allowed ${className}`} disabled={disabled} readOnly={disabled} />{Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />}</div> ) }
-// Simplified Select
-const Select = ({ id, value: initialValue, onChange, children, className = '', disabled = false }) => { const [value, setValue] = useState(initialValue); useEffect(() => { setValue(initialValue) }, [initialValue]); const handleChange = (e) => { setValue(e.target.value); if(onChange) onChange(e.target.value); }; return ( <select id={id} value={value} onChange={handleChange} className={`w-full rounded-xl border border-neutral-300 bg-white py-2.5 pl-4 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-[#2C5CC5]/30 appearance-none bg-no-repeat bg-[right_0.75rem_center] bg-[length:1em_1em] bg-[url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e")] read-only:bg-slate-50 read-only:cursor-not-allowed ${className}`} disabled={disabled} readOnly={disabled}> {children} </select> ) }
-// Simplified Table
-const Table = ({ columns, data, rowKey, onRowClick }) => ( <div className="overflow-auto"><table className="min-w-full text-left"><thead className="border-b border-neutral-200"><tr>{columns.map((col) => ( <th key={col.key} className="px-5 py-3.5 text-xs font-medium text-neutral-500 tracking-wider"> {col.label} </th> ))}</tr></thead><tbody> {data.map((row, idx) => ( <tr key={row[rowKey] || idx} onClick={() => onRowClick && onRowClick(row)} className={`transition-colors duration-100 ${idx % 2 === 0 ? 'bg-white' : 'bg-neutral-50/50'} ${onRowClick ? 'cursor-pointer hover:bg-blue-50' : ''}`}> {columns.map((col) => ( <td key={col.key} className="px-5 py-3 text-[13px] text-neutral-700 align-top"> {col.render ? col.render(row) : row[col.key]} </td> ))} </tr> ))} </tbody></table></div> )
-// --- End of Reusable UI Components ---
-
-
+import React, { useState, useEffect } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import {
-  FaUserAlt,
-  FaEnvelope,
-  FaPhone,
+  FaArrowLeft,
+  FaBuilding,
   FaEdit,
-  FaTrash,
-  FaCalendarAlt,
-  FaBirthdayCake,
-  FaCamera, // Changed from FaLink
-  FaTasks,
-  FaDollarSign,
-  FaStickyNote,
-  FaClock,
+  FaEnvelope,
+  FaFacebook,
+  FaHistory,
+  FaInstagram,
+  FaLinkedin,
+  FaMapMarkerAlt,
+  FaPhone,
+  FaRegCalendarAlt,
   FaSave,
+  FaShareAlt,
   FaTimes,
+  FaTiktok,
+  FaTwitter,
+  FaUserTie,
 } from 'react-icons/fa'
+import Card from '../components/ui/Card'
+import Button from '../components/ui/Button'
+import { Badge } from '../components/ui/Badge'
+import PageHeader from '../components/ui/PageHeader'
+import Modal from '../components/ui/Modal'
+import contactsData from '../data/mockContacts'
 
-/* -------------------------------------------------------
- * Dummy Data (Simulating data fetch)
- * ----------------------------------------------------- */
-const DUMMY_CONTACTS = {
-  '1': { id: 1, fullName: 'Alia Smith', titlePosition: 'Account Executive', phoneNumber: '+62 812 3456 7890', emailAddress: 'alia.smith@techcorp.com', placeOfBirth: 'Jakarta', dateOfBirth: '1990-11-05', educationHistory: 'e.g., MBA from Harvard Business School', hobbiesInterests: 'e.g., Golf, Reading, Photography', relationshipStatus: 'Warm', decisionRole: 'Influencer', company: 'TechCorp Solutions', avatarUrl: null },
-  '2': { id: 2, fullName: 'Budi Hartono', titlePosition: 'CTO', phoneNumber: '+62 811 1234 5678', emailAddress: 'budi.h@innovatehub.id', placeOfBirth: 'Surabaya', dateOfBirth: '1985-11-25', educationHistory: 'e.g., PhD in Computer Science, ITB', hobbiesInterests: 'e.g., Chess, Hiking', relationshipStatus: 'Neutral', decisionRole: 'Decision Maker', company: 'InnovateHub', avatarUrl: null },
+// ... (Konstanta DEFAULT_PROFILE, CONTACT_ENRICHMENTS, TAB_OPTIONS, etc. tetap sama) ...
+
+const DEFAULT_PROFILE = {
+  avatarUrl: null,
+  department: 'Account Management',
+  status: 'Aktif',
+  relationshipStatus: 'Neutral',
+  decisionRole: 'User',
+  emails: [],
+  phones: [],
+  socials: {},
+  address: '',
+  contactPreferences: {
+    bestTime: '09:00 - 17:00 WIB',
+    channel: 'Email',
+  },
+  placeOfBirth: '-',
+  dateOfBirth: '',
+  educationHistory: '-',
+  hobbiesInterests: '-',
+  notes: [],
+  interactions: [],
 }
-const DUMMY_ACTIVITIES = [ { id: 1, type: 'Call', date: '2025-10-01', summary: 'Discussed Q4 projections. Follow-up needed.' }, { id: 2, type: 'Email', date: '2025-09-28', summary: 'Sent pricing info for new bundle.' }, ]
-const DUMMY_OPPORTUNITIES = [ { id: 1, name: 'Q4 Enterprise Upgrade', stage: 'Proposal', amount: 'Rp 250.000.000', closeDate: '2025-12-15' }, { id: 2, name: 'New LOB Expansion', stage: 'Qualification', amount: 'Rp 80.000.000', closeDate: '2026-02-01' }, ]
-const DUMMY_NOTES = [ { id: 1, user: 'Account Manager', date: '2025-09-15', note: 'Budi is the main technical decision-maker. Very interested in API integration.' }, ]
 
-/* -------------------------------------------------------
- * Helper Functions (Avatars, Birthday)
- * ----------------------------------------------------- */
-const getInitials = (name = '') => { const parts = name.split(' '); const first = parts[0]?.[0] || ''; const last = parts.length > 1 ? parts[parts.length - 1]?.[0] : ''; return `${first}${last}`.toUpperCase(); }
-const AVATAR_COLORS = [ 'bg-blue-100 text-blue-700', 'bg-emerald-100 text-emerald-700', 'bg-yellow-100 text-yellow-700', 'bg-red-100 text-red-700', 'bg-purple-100 text-purple-700', 'bg-indigo-100 text-indigo-700', ]
-const getAvatarColor = (name = '') => { const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0); return AVATAR_COLORS[hash % AVATAR_COLORS.length]; }
+const CONTACT_ENRICHMENTS = {
+  'alia-smith': {
+    avatarUrl: 'https://images.unsplash.com/photo-1509967419530-da38b4704bc6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&q=80',
+    department: 'Enterprise Sales',
+    status: 'Aktif',
+    relationshipStatus: 'Promotor',
+    decisionRole: 'Influencer',
+    emails: ['alia.smith@techcorp.com', 'a.smith@personalmail.com'],
+    phones: [
+      { label: 'Mobile', type: 'mobile', value: '+62 812 3456 7890' },
+      { label: 'Office', type: 'office', value: '+1 (555) 321-8899' },
+      { label: 'WhatsApp', type: 'whatsapp', value: '+62 812 3456 7890' },
+    ],
+    socials: {
+      linkedin: 'https://www.linkedin.com/in/aliasmith',
+      instagram: 'https://www.instagram.com/aliasales',
+    },
+    address: 'Jl. HR Rasuna Said Kav. 12, Kuningan, Jakarta Selatan',
+    contactPreferences: {
+      bestTime: '09:00 - 11:30 WIB',
+      channel: 'WhatsApp atau LinkedIn',
+    },
+    placeOfBirth: 'Jakarta',
+    dateOfBirth: '1990-11-05',
+    educationHistory: 'MBA, Harvard Business School (2015)',
+    hobbiesInterests: 'Golf, membaca buku bisnis, museum hopping',
+    notes: [
+      {
+        id: 1,
+        user: 'Vino Saputra',
+        date: '2025-10-01',
+        note: 'Lebih responsif saat diskusi melalui LinkedIn DM.',
+      },
+      {
+        id: 2,
+        user: 'Yunisa Putri',
+        date: '2025-09-21',
+        note: 'Suka overview deck dengan visual kuat. Kirim versi terbaru minggu depan.',
+      },
+    ],
+    interactions: [
+      {
+        id: 'act-1',
+        type: 'Meeting',
+        channel: 'Zoom',
+        date: '2025-10-04',
+        summary: 'Pembahasan bundling solusi konektivitas & managed service untuk Q1 2026.',
+      },
+      {
+        id: 'act-2',
+        type: 'Email',
+        channel: 'Email',
+        date: '2025-09-28',
+        summary: 'Kirim follow-up proposal managed security services.',
+      },
+      {
+        id: 'act-3',
+        type: 'Call',
+        channel: 'Phone',
+        date: '2025-09-15',
+        summary: 'Diskusi kebutuhan onboarding untuk kantor cabang di Surabaya.',
+      },
+    ],
+  },
+  'budi-hartono': {
+    avatarUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&q=80',
+    department: 'Technology & Innovation',
+    status: 'Aktif',
+    relationshipStatus: 'Neutral',
+    decisionRole: 'Decision Maker',
+    emails: ['budi.h@innovatehub.id'],
+    phones: [
+      { label: 'Mobile', type: 'mobile', value: '+62 811 1234 5678' },
+      { label: 'Office', type: 'office', value: '+62 21 7788 9900' },
+    ],
+    socials: {
+      linkedin: 'https://www.linkedin.com/in/budihartono',
+      twitter: 'https://twitter.com/buditech',
+    },
+    address: 'The Prominence Office Tower Lt 12, BSD, Tangerang Selatan',
+    contactPreferences: {
+      bestTime: '13:00 - 16:00 WIB',
+      channel: 'Email resmi + follow-up via phone',
+    },
+    placeOfBirth: 'Surabaya',
+    dateOfBirth: '1985-11-25',
+    educationHistory: 'PhD Computer Science, ITB',
+    hobbiesInterests: 'Catur, trail running, teknologi AI',
+    notes: [
+      {
+        id: 3,
+        user: 'Rifki Alamsyah',
+        date: '2025-09-12',
+        note: 'Prioritas utama keamanan data & latency rendah.',
+      },
+    ],
+    interactions: [
+      {
+        id: 'act-4',
+        type: 'Tech Workshop',
+        channel: 'Onsite',
+        date: '2025-10-02',
+        summary: 'Hands-on workshop edge computing untuk tim engineering.',
+      },
+    ],
+  },
+  'catherine-lee': {
+    avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&q=80',
+    department: 'Procurement',
+    status: 'Aktif',
+    relationshipStatus: 'Promotor',
+    decisionRole: 'User',
+    emails: ['c.lee@globallogistics.com'],
+    phones: [{ label: 'Mobile', type: 'mobile', value: '+1 (555) 987-6543' }],
+    socials: {
+      linkedin: 'https://www.linkedin.com/in/catherinelee',
+    },
+    address: '88 Shenton Way, #23-01, Singapore',
+    contactPreferences: {
+      bestTime: '08:30 - 10:00 WIB',
+      channel: 'Email',
+    },
+    placeOfBirth: 'Singapore',
+    dateOfBirth: '1991-04-17',
+    educationHistory: 'BBA, National University of Singapore',
+    hobbiesInterests: 'Travel, baking, HIIT workout',
+  },
+  'david-kim': {
+    avatarUrl: 'https://images.unsplash.com/photo-1557862921-37829c790f19?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&q=80',
+    department: 'Information Technology',
+    status: 'Aktif',
+    relationshipStatus: 'Detractor',
+    decisionRole: 'Decision Maker',
+    emails: ['david.kim@techcorp.com'],
+    phones: [
+      { label: 'Mobile', type: 'mobile', value: '+1 (555) 111-2222' },
+      { label: 'WhatsApp', type: 'whatsapp', value: '+1 (555) 111-2222' },
+    ],
+    socials: {
+      linkedin: 'https://www.linkedin.com/in/davidkim',
+      twitter: 'https://twitter.com/dkim_it',
+    },
+    address: '1 Market St, San Francisco, CA',
+    contactPreferences: {
+      bestTime: '22:00 - 00:00 WIB (PST working hours)',
+      channel: 'Teams atau Email',
+    },
+    placeOfBirth: 'Seoul',
+    dateOfBirth: '1983-02-09',
+    educationHistory: 'MSc Cybersecurity, Stanford University',
+    hobbiesInterests: 'Barista home brewing, sci-fi novels',
+  },
+  'eka-putri': {
+    avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&q=80',
+    department: 'Finance',
+    status: 'Aktif',
+    relationshipStatus: 'Neutral',
+    decisionRole: 'Influencer',
+    emails: ['eka.p@dataweave.co'],
+    phones: [
+      { label: 'Mobile', type: 'mobile', value: '+62 811 9876 5432' },
+      { label: 'Office', type: 'office', value: '+62 21 6677 1122' },
+    ],
+    socials: {
+      instagram: 'https://www.instagram.com/ekafinance',
+      linkedin: 'https://www.linkedin.com/in/ekaputri',
+    },
+    address: 'Jl. Jend Sudirman Kav 48, Jakarta Selatan',
+    contactPreferences: {
+      bestTime: '10:00 - 12:00 WIB',
+      channel: 'Telepon kantor',
+    },
+    placeOfBirth: 'Bandung',
+    dateOfBirth: '1992-08-14',
+    educationHistory: 'S2 Akuntansi, Universitas Indonesia',
+    hobbiesInterests: 'Yoga, journaling, kuliner lokal',
+  },
+  'farhan-yusuf': {
+    avatarUrl: 'https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&q=80',
+    department: 'Procurement',
+    status: 'Aktif',
+    relationshipStatus: 'Promotor',
+    decisionRole: 'Decision Maker',
+    emails: ['farhan.yusuf@nusaretail.id'],
+    phones: [
+      { label: 'Mobile', type: 'mobile', value: '+62 813 2233 4455' },
+      { label: 'WhatsApp', type: 'whatsapp', value: '+62 813 2233 4455' },
+    ],
+    socials: {
+      linkedin: 'https://www.linkedin.com/in/farhanyusuf',
+    },
+    address: 'Menara BCA Lt 38, Jakarta Pusat',
+    contactPreferences: {
+      bestTime: '15:00 - 17:00 WIB',
+      channel: 'WhatsApp',
+    },
+    placeOfBirth: 'Padang',
+    dateOfBirth: '1987-06-21',
+    educationHistory: 'BSc Industrial Engineering, ITB',
+    hobbiesInterests: 'Kuliner nusantara, fotografi street',
+  },
+  'giovanni-rossi': {
+    department: 'Operations',
+    status: 'Tidak Aktif',
+    relationshipStatus: 'Detractor',
+    decisionRole: 'User',
+    emails: ['giovanni.rossi@logistica.it'],
+    phones: [{ label: 'Mobile', type: 'mobile', value: '+39 02 555 0101' }],
+    socials: {
+      linkedin: 'https://www.linkedin.com/in/giovannirossi',
+      facebook: 'https://www.facebook.com/g.rossi',
+    },
+    address: 'Via Torino 88, Milano, Italy',
+    contactPreferences: {
+      bestTime: '16:00 - 19:00 WIB',
+      channel: 'Email',
+    },
+    placeOfBirth: 'Milan',
+    dateOfBirth: '1978-12-30',
+    educationHistory: 'Laurea Magistrale, Politecnico di Milano',
+    hobbiesInterests: 'Sepeda, fotografi arsitektur',
+  },
+  'hana-rahma': {
+    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&q=80',
+    department: 'Marketing',
+    status: 'Aktif',
+    relationshipStatus: 'Promotor',
+    decisionRole: 'Influencer',
+    emails: ['hana.rahma@skylinemedia.co.id', 'hana.rahma@gmail.com'],
+    phones: [
+      { label: 'Mobile', type: 'mobile', value: '+62 812 8899 7766' },
+      { label: 'WhatsApp', type: 'whatsapp', value: '+62 812 8899 7766' },
+    ],
+    socials: {
+      instagram: 'https://www.instagram.com/hanarahma',
+      tiktok: 'https://www.tiktok.com/@hanarahma',
+    },
+    address: 'Jl. Kemang Raya No. 78, Jakarta Selatan',
+    contactPreferences: {
+      bestTime: '11:00 - 14:00 WIB',
+      channel: 'Instagram DM atau WhatsApp',
+    },
+    placeOfBirth: 'Medan',
+    dateOfBirth: '1994-03-11',
+    educationHistory: 'S1 Komunikasi, Universitas Padjadjaran',
+    hobbiesInterests: 'Content creation, lari pagi, kopi susu',
+  },
+}
 
-const isBirthdayComingUp = (dobString) => {
-  if (!dobString) return false
-  try {
-    const dob = new Date(dobString.split('-').join('/'))
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    const currentYear = today.getFullYear()
-    const birthdayThisYear = new Date(currentYear, dob.getMonth(), dob.getDate()); birthdayThisYear.setHours(0, 0, 0, 0);
-    const diffTime = birthdayThisYear.getTime() - today.getTime()
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    if (diffDays < 0) {
-      const birthdayNextYear = new Date(currentYear + 1, dob.getMonth(), dob.getDate())
-      const nextDiffTime = birthdayNextYear.getTime() - today.getTime()
-      const nextDiffDays = Math.ceil(nextDiffTime / (1000 * 60 * 60 * 24))
-      return nextDiffDays >= 0 && nextDiffDays <= 7
+const TAB_OPTIONS = [
+  { key: 'information', label: 'Informasi Kontak' },
+  { key: 'interactions', label: 'Riwayat Interaksi' },
+  { key: 'notes', label: 'Catatan' },
+]
+
+const SOCIAL_PLATFORMS = [
+  { key: 'linkedin', label: 'LinkedIn', icon: FaLinkedin },
+  { key: 'instagram', label: 'Instagram', icon: FaInstagram },
+  { key: 'facebook', label: 'Facebook', icon: FaFacebook },
+  { key: 'twitter', label: 'Twitter', icon: FaTwitter },
+  { key: 'tiktok', label: 'TikTok', icon: FaTiktok },
+]
+
+const statusToVariant = {
+  Aktif: 'success',
+  'Tidak Aktif': 'danger',
+}
+
+const relationshipChipStyles = {
+  Promotor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  Neutral: 'bg-amber-50 text-amber-700 border-amber-200',
+  Detractor: 'bg-red-50 text-red-700 border-red-200',
+}
+
+const decisionRoleChipStyles = {
+  'Decision Maker': 'bg-purple-50 text-purple-700 border-purple-200',
+  Influencer: 'bg-blue-50 text-blue-700 border-blue-200',
+  User: 'bg-neutral-100 text-neutral-700 border-neutral-200',
+}
+
+const phoneTypeChipStyles = {
+  mobile: 'bg-blue-50 text-blue-700 border-blue-200',
+  office: 'bg-neutral-100 text-neutral-700 border-neutral-200',
+  whatsapp: 'bg-green-50 text-green-700 border-green-200',
+}
+
+const slugify = (value = '') =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+
+const getAvatarColor = (name = '') => {
+  const palette = [
+    'bg-blue-100 text-blue-700',
+    'bg-emerald-100 text-emerald-700',
+    'bg-yellow-100 text-yellow-700',
+    'bg-red-100 text-red-700',
+    'bg-purple-100 text-purple-700',
+    'bg-indigo-100 text-indigo-700',
+  ]
+  const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+  return palette[hash % palette.length]
+}
+
+const getInitials = (name = '') => {
+  const parts = name.trim().split(' ')
+  const first = parts[0]?.[0] || ''
+  const last = parts.length > 1 ? parts[parts.length - 1]?.[0] : ''
+  return `${first}${last}`.toUpperCase()
+}
+
+const buildContactProfile = (baseContact) => {
+  if (!baseContact) return null
+  const enrichment = CONTACT_ENRICHMENTS[baseContact.id] || {}
+  const profile = {
+    ...DEFAULT_PROFILE,
+    ...baseContact,
+    ...enrichment,
+  }
+
+  profile.avatarUrl = enrichment.avatarUrl || baseContact.avatarUrl || null
+  
+  profile.emails =
+    enrichment.emails && enrichment.emails.length > 0
+      ? enrichment.emails
+      : [baseContact.email].filter(Boolean)
+
+  profile.phones =
+    enrichment.phones && enrichment.phones.length > 0
+      ? enrichment.phones
+      : [baseContact.phone ? { label: 'Mobile', type: 'mobile', value: baseContact.phone } : null].filter(Boolean)
+
+  profile.socials = { ...DEFAULT_PROFILE.socials, ...enrichment.socials }
+  profile.companySlug = enrichment.companySlug || slugify(baseContact.company || 'customer')
+  profile.notes = enrichment.notes || DEFAULT_PROFILE.notes
+  profile.interactions = enrichment.interactions || DEFAULT_PROFILE.interactions
+  profile.fullName = profile.fullName || profile.name
+  return profile
+}
+
+const duplicateProfile = (profile) => {
+  if (!profile) return null
+  return {
+    ...profile,
+    emails: [...(profile.emails || [])],
+    phones: (profile.phones || []).map((phone) => ({ ...phone })),
+    socials: { ...(profile.socials || {}) },
+    contactPreferences: { ...(profile.contactPreferences || {}) },
+  }
+}
+
+const changeFieldLabels = {
+  avatarUrl: 'URL Avatar',
+  status: 'Status',
+  relationshipStatus: 'Relasi',
+  decisionRole: 'Peran',
+  emails: 'Email',
+  phones: 'Nomor telepon',
+  socials: 'Media sosial',
+  address: 'Alamat',
+  contactPreferences: 'Preferensi kontak',
+  placeOfBirth: 'Tempat lahir',
+  dateOfBirth: 'Tanggal lahir',
+  educationHistory: 'Riwayat pendidikan',
+  hobbiesInterests: 'Hobi & minat',
+}
+
+const getChangedFields = (previousData, updatedData) => {
+  if (!previousData || !updatedData) return []
+  const changes = []
+  Object.entries(changeFieldLabels).forEach(([field, label]) => {
+    const prevValue = JSON.stringify(previousData[field] ?? null)
+    const nextValue = JSON.stringify(updatedData[field] ?? null)
+    if (prevValue !== nextValue) {
+      changes.push(label)
     }
-    return diffDays >= 0 && diffDays <= 7
-  } catch (e) { return false }
+  })
+  return changes
 }
 
-/* -------------------------------------------------------
- * Reusable Form Field Component
- * ----------------------------------------------------- */
-const FormField = ({ id, label, children }) => (
-  <div>
-    <label htmlFor={id} className="block text-sm font-medium text-slate-600 mb-1.5">
-      {label}
-    </label>
+const InfoSection = ({ title, description, children, className = '' }) => (
+  <div className={`rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm space-y-4 ${className}`}>
+    <div>
+      {/* PERUBAHAN: Judul InfoSection diberi warna biru utama */}
+      <p className="text-sm font-semibold text-[#2C5CC5]">{title}</p>
+      {description && <p className="text-xs text-neutral-500 mt-0.5">{description}</p>}
+    </div>
     {children}
   </div>
 )
 
-/* -------------------------------------------------------
- * Main Contact Detail Page (CLEANED TABBED DESIGN)
- * ----------------------------------------------------- */
+const EmptyState = ({ title, subtitle, action }) => (
+  <Card className="text-center space-y-3">
+    <p className="text-xl font-semibold text-neutral-800">{title}</p>
+    <p className="text-neutral-500">{subtitle}</p>
+    {action}
+  </Card>
+)
+
 export default function ContactDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  
-  const [originalData, setOriginalData] = useState(() => DUMMY_CONTACTS[id] || {})
-  const [formData, setFormData] = useState(originalData)
-  const [isEditing, setIsEditing] = useState(false)
-  const [currentTab, setCurrentTab] = useState('Personal Information')
-  
-  const fileInputRef = useRef(null) // Create ref for file input
+
+  const baseContact = contactsData.find((contactItem) => contactItem.id === id)
+  const [contact, setContact] = useState(() => buildContactProfile(baseContact))
+  const [infoDraft, setInfoDraft] = useState(() => duplicateProfile(buildContactProfile(baseContact)))
+  const [activeTab, setActiveTab] = useState('information')
+  const [isEditingInfo, setIsEditingInfo] = useState(false)
+  const [changeLog, setChangeLog] = useState([])
+  const [notes, setNotes] = useState(contact?.notes || [])
+  const [newNote, setNewNote] = useState('')
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false)
 
   useEffect(() => {
-    const contactData = DUMMY_CONTACTS[id] || {}
-    setFormData(contactData)
-    setOriginalData(contactData)
-    setIsEditing(false)
-  }, [id])
+    const profile = buildContactProfile(baseContact)
+    setContact(profile)
+    setInfoDraft(duplicateProfile(profile))
+    setNotes(profile?.notes || [])
+    setNewNote('')
+    setIsEditingInfo(false)
+    setChangeLog([])
+  }, [baseContact?.id])
 
-  const handleInputChange = (field) => (value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
+  useEffect(() => {
+    if (contact) {
+      setNotes(contact.notes || [])
+    }
+  }, [contact?.id])
+
+  const handleStartEdit = () => {
+    if (!contact) return
+    setInfoDraft(duplicateProfile(contact))
+    setIsEditingInfo(true)
   }
 
-  const handleSave = () => {
-    // In a real app, if formData.avatarUrl is a "blob:" URL,
-    // you would upload the file from fileInputRef.current.files[0]
-    // and replace the blob URL with the permanent one from your server.
-    console.log('Saving contact data:', formData)
-    setOriginalData(formData)
-    setIsEditing(false)
-    alert('Contact saved!')
-  }
-  
-  const handleCancel = () => {
-    setFormData(originalData) // Revert all changes, including avatar
-    setIsEditing(false)
+  const handleCancelEdit = () => {
+    setInfoDraft(duplicateProfile(contact))
+    setIsEditingInfo(false)
   }
 
-  const handleDelete = () => {
-    if (window.confirm(`Are you sure you want to delete ${formData.fullName}?`)) {
-      console.log('Deleting contact:', formData.id)
-      alert('Contact deleted!')
-      navigate('/contacts')
+  const handleSaveInfo = () => {
+    if (!contact) return
+    const normalizedDraft = {
+      ...contact,
+      ...infoDraft,
+      avatarUrl: infoDraft.avatarUrl?.trim() || null,
+      status: infoDraft.status || 'Aktif',
+      relationshipStatus: infoDraft.relationshipStatus || 'Neutral',
+      decisionRole: infoDraft.decisionRole || 'User',
+      emails: (infoDraft.emails || []).map((email) => email.trim()).filter(Boolean),
+      phones: (infoDraft.phones || [])
+        .map((phone) => ({
+          label: phone.label?.trim() || 'Kontak',
+          type: phone.type || 'mobile',
+          value: phone.value?.trim() || '',
+        }))
+        .filter((phone) => phone.value),
+      socials: Object.entries(infoDraft.socials || {}).reduce((acc, [platform, url]) => {
+        if (url && url.trim()) {
+          acc[platform] = url.trim()
+        }
+        return acc
+      }, {}),
+      address: infoDraft.address || '',
+      contactPreferences: {
+        bestTime: infoDraft.contactPreferences?.bestTime || '',
+        channel: infoDraft.contactPreferences?.channel || '',
+      },
+      placeOfBirth: infoDraft.placeOfBirth || '',
+      dateOfBirth: infoDraft.dateOfBirth || '',
+      educationHistory: infoDraft.educationHistory || '',
+      hobbiesInterests: infoDraft.hobbiesInterests || '',
+    }
+
+    const changes = getChangedFields(contact, normalizedDraft)
+    setContact(normalizedDraft)
+    setInfoDraft(duplicateProfile(normalizedDraft))
+    setIsEditingInfo(false)
+
+    if (changes.length > 0) {
+      const entry = {
+        id: `log-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        user: 'Anda',
+        fields: changes,
+      }
+      setChangeLog((prev) => [entry, ...prev])
     }
   }
+
+  const handleAddNote = () => {
+    if (!newNote.trim()) return
+    const payload = {
+      id: `note-${Date.now()}`,
+      user: 'Anda',
+      date: new Date().toLocaleDateString('id-ID'),
+      note: newNote.trim(),
+    }
+    setNotes((prev) => [payload, ...prev])
+    setNewNote('')
+  }
   
-  // New handler for file input change
-  const handleFileChange = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      // Create a local URL to preview the image
-      const previewUrl = URL.createObjectURL(file)
-      setFormData(prev => ({ ...prev, avatarUrl: previewUrl }))
+  const handleAvatarClick = () => {
+    if (!isEditingInfo) return 
+
+    const newAvatarUrl = window.prompt(
+      'Masukkan URL gambar baru:',
+      infoDraft.avatarUrl || '' 
+    )
+
+    if (newAvatarUrl !== null) { 
+      setInfoDraft((prev) => ({
+        ...prev,
+        avatarUrl: newAvatarUrl.trim(),
+      }))
     }
   }
-  
-  // Handler to trigger file input
-  const triggerFileInput = () => {
-    fileInputRef.current?.click()
+
+  if (!contact) {
+    return (
+      <div className="px-4 py-12 space-y-6">
+        <PageHeader
+          title="Kontak Tidak Ditemukan"
+          subtitle="Kontak yang Anda cari tidak tersedia."
+          onBack={() => navigate(-1)}
+        />
+        <EmptyState
+          title="Kontak tidak ditemukan"
+          subtitle="Kontak yang Anda cari tidak tersedia atau sudah dihapus."
+          action={
+            <Button variant="primary" onClick={() => navigate('/contacts')}>
+              Kembali ke daftar kontak
+            </Button>
+          }
+        />
+      </div>
+    )
   }
 
-  const initials = getInitials(originalData.fullName)
-  const avatarColor = getAvatarColor(originalData.fullName)
-  const birthdayUpcoming = isBirthdayComingUp(originalData.dateOfBirth)
+  const avatarFallback = getInitials(contact.name || contact.fullName || contact.fullname || 'Contact')
+  const avatarColor = getAvatarColor(contact.name || contact.fullName || contact.fullname || 'Contact')
   
-  const TABS = [
-    { name: 'Personal Information', icon: FaUserAlt },
-    { name: 'Activities', icon: FaTasks },
-    { name: 'Notes', icon: FaStickyNote },
-  ]
+  const displayAvatarUrl = isEditingInfo ? infoDraft.avatarUrl : contact.avatarUrl
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'information':
+        return (
+          <ContactInfoTab
+            contact={contact}
+            draft={infoDraft || contact}
+            isEditing={isEditingInfo}
+            onStartEdit={handleStartEdit}
+            onCancelEdit={handleCancelEdit}
+            onSaveEdit={handleSaveInfo}
+            setDraft={setInfoDraft}
+            changeLog={changeLog}
+            onHistoryClick={() => setIsHistoryModalOpen(true)}
+          />
+        )
+      case 'interactions':
+        return <InteractionsTab interactions={contact.interactions} onNavigate={() => navigate('/activities')} />
+      case 'notes':
+        return (
+          <NotesTab
+            notes={notes}
+            newNote={newNote}
+            onChangeNote={setNewNote}
+            onAddNote={handleAddNote}
+          />
+        )
+      default:
+        return null
+    }
+  }
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-7xl mx-auto p-2">
-      
-      {/* --- NEW MERGED PAGE HEADER --- */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-        <div className="flex items-center gap-4">
-          
-          {/* Avatar / PIC */}
-          <div className="relative flex-shrink-0">
-            {formData.avatarUrl ? (
-              <img 
-                src={formData.avatarUrl} 
-                alt="Profile" 
-                className="h-20 w-20 rounded-full object-cover" 
-              />
-            ) : (
-              <div
-                className={`flex h-20 w-20 items-center justify-center rounded-full text-3xl font-semibold ${avatarColor}`}
-              >
-                {initials || 'PIC'}
-              </div>
-            )}
-            {isEditing && (
-              <Button 
-                variant="secondary" 
-                size="sm" 
-                className="absolute -bottom-1 -right-1 !p-2 !rounded-full shadow-md"
-                title="Change PIC"
-                onClick={triggerFileInput} // Triggers file input
-              >
-                <FaCamera className="h-3 w-3" />
-              </Button>
-            )}
-          </div>
-          
-          {/* Hidden File Input */}
-          <input 
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            className="hidden"
-            accept="image/png, image/jpeg, image/gif"
-          />
+    <div className="px-4 pb-12 space-y-6 animate-fade-in">
+      <PageHeader
+        title={contact.fullName || contact.name}
+        subtitle={`Detail kontak untuk ${contact.company}`}
+        onBack={() => navigate(-1)}
+      />
 
-          {/* Name, Title, Birthday */}
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold text-slate-900">{originalData.fullName || 'New Contact'}</h1>
-              {!isEditing && birthdayUpcoming && (
-                <Tag variant="yellow" icon={FaBirthdayCake}>
-                  Birthday upcoming!
-                </Tag>
-              )}
-            </div>
-            <p className="mt-1 text-lg text-slate-600">{originalData.titlePosition || 'Title/Position'}</p>
-          </div>
-        </div>
-        <div className="flex-shrink-0">
-          {isEditing ? (
-            <div className="flex gap-2">
-              <Button variant="secondary" icon={FaTimes} onClick={handleCancel}>Cancel</Button>
-              <Button variant="primary" icon={FaSave} onClick={handleSave}>Save Changes</Button>
-            </div>
-          ) : (
-            <Button variant="secondary" icon={FaEdit} onClick={() => setIsEditing(true)}>Edit</Button>
-          )}
-        </div>
-      </div>
-
-      {/* --- Tabbed Content --- */}
-      <Card noPadding>
-        {/* Tab Headers */}
-        <div className="flex border-b border-neutral-200 px-5">
-          {TABS.map((tab) => (
+      <Card className="p-0 overflow-hidden">
+        <div className="flex flex-col md:flex-row gap-6 p-6">
+          <div className="flex items-start gap-4 flex-1">
+            
             <button
-              key={tab.name}
-              onClick={() => setCurrentTab(tab.name)}
-              className={`flex items-center gap-2 -mb-px px-1 py-4 text-sm font-medium
-                ${currentTab === tab.name
-                  ? 'border-b-2 border-[#2C5CC5] text-[#2C5CC5]'
-                  : 'text-slate-500 hover:text-slate-800 border-b-2 border-transparent'
-                }
-              `}
+              type="button"
+              onClick={handleAvatarClick}
+              className={`relative flex-shrink-0 rounded-full ${
+                isEditingInfo ? 'cursor-pointer group hover:opacity-90' : 'cursor-default'
+              }`}
+              disabled={!isEditingInfo}
+              aria-label="Ubah avatar"
             >
-              <tab.icon />
-              {tab.name}
+              {displayAvatarUrl ? (
+                <img
+                  src={displayAvatarUrl}
+                  alt={contact.fullName || contact.name}
+                  className="h-20 w-20 rounded-full object-cover"
+                />
+              ) : (
+                <div className={`h-20 w-20 rounded-full grid place-items-center text-2xl font-semibold ${avatarColor}`}>
+                  {avatarFallback}
+                </div>
+              )}
+              {isEditingInfo && (
+                <div className="absolute inset-0 h-20 w-20 rounded-full bg-black/50 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                  <FaEdit size={24} />
+                </div>
+              )}
+            </button>
+            
+            <div className="space-y-2">
+              <div>
+                <p className="text-2xl font-semibold text-neutral-900">{contact.fullName || contact.name}</p>
+                <p className="text-neutral-600 flex items-center gap-2 text-sm">
+                  {/* PERUBAHAN: Ikon diberi warna */}
+                  <FaUserTie className="text-blue-500" />
+                  {contact.title || contact.titlePosition || contact.jobTitle || 'Contact'} ·{' '}
+                  {contact.department}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Badge variant={statusToVariant[contact.status] || 'neutral'}>{contact.status}</Badge>
+                <span
+                  className={`inline-flex items-center rounded-full border px-3 py-0.5 text-xs font-semibold ${
+                    relationshipChipStyles[contact.relationshipStatus] || 'bg-neutral-100 text-neutral-700 border-neutral-200'
+                  }`}
+                >
+                  {contact.relationshipStatus}
+                </span>
+                <span
+                  className={`inline-flex items-center rounded-full border px-3 py-0.5 text-xs font-semibold ${
+                    decisionRoleChipStyles[contact.decisionRole] ||
+                    'bg-neutral-100 text-neutral-700 border-neutral-200'
+                  }`}
+                >
+                  {contact.decisionRole}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col gap-3 md:w-72">
+            <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 space-y-2">
+              <p className="text-xs uppercase text-neutral-500">Perusahaan</p>
+              <button
+                type="button"
+                onClick={() => navigate(`/customers/${contact.companySlug}`)}
+                className="inline-flex items-center gap-2 text-left text-sm font-semibold text-[#2C5CC5] hover:underline"
+              >
+                {/* PERUBAHAN: Ikon diberi warna */}
+                <FaBuilding className="text-blue-500" />
+                {contact.company}
+              </button>
+            </div>
+            <div className="rounded-2xl border border-neutral-200 bg-white p-4 space-y-1 text-sm text-neutral-600">
+              <p className="text-xs uppercase text-neutral-500">Preferensi Kontak</p>
+              <p>Waktu terbaik: {contact.contactPreferences.bestTime}</p>
+              <p>Media: {contact.contactPreferences.channel}</p>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="p-0 overflow-hidden">
+        <div className="flex border-b border-neutral-200 px-6 gap-6">
+          {TAB_OPTIONS.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`py-4 text-sm font-semibold border-b-2 transition-colors ${
+                activeTab === tab.key
+                  ? 'border-[#2C5CC5] text-[#2C5CC5]'
+                  : 'border-transparent text-neutral-500 hover:text-neutral-800'
+              }`}
+            >
+              {tab.label}
             </button>
           ))}
         </div>
-        
-        {/* Tab Content */}
-        <div className="p-5">
-          {currentTab === 'Personal Information' && (
-            <PersonalInformationTab
-              formData={formData}
-              isEditing={isEditing}
-              handleInputChange={handleInputChange}
-              handleDelete={handleDelete}
-            />
-          )}
-          
-          {currentTab === 'Activities' && (
-            <ActivitiesTab activities={DUMMY_ACTIVITIES} />
-          )}
-          
-          {currentTab === 'Notes' && (
-            <NotesTab notes={DUMMY_NOTES} />
-          )}
-        </div>
+        <div className="p-6 bg-neutral-50">{renderTabContent()}</div>
       </Card>
+
+      <Modal
+        open={isHistoryModalOpen}
+        onClose={() => setIsHistoryModalOpen(false)}
+        title="Riwayat Perubahan Data"
+        footer={
+          <div className="flex justify-end">
+            <Button variant="secondary" onClick={() => setIsHistoryModalOpen(false)}>
+              Tutup
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-3">
+          {changeLog.length === 0 ? (
+            <p className="text-sm text-neutral-500">Belum ada perubahan yang tercatat.</p>
+          ) : (
+            changeLog.map((entry) => (
+              <div key={entry.id} className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-sm">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="font-semibold text-neutral-800 flex items-center gap-2">
+                    {/* PERUBAHAN: Ikon diberi warna */}
+                    <FaHistory className="text-blue-500" />
+                    {entry.user}
+                  </p>
+                  <p className="text-xs text-neutral-500">
+                    {new Date(entry.timestamp).toLocaleString('id-ID', {
+                      dateStyle: 'medium',
+                      timeStyle: 'short',
+                    })}
+                  </p>
+                </div>
+                <p className="text-xs text-neutral-500 mt-1">Perubahan pada: {entry.fields.join(', ')}</p>
+              </div>
+            ))
+          )}
+        </div>
+      </Modal>
     </div>
   )
 }
 
-/* -------------------------------------------------------
- * Tab 1: Personal Information (CLEANED)
- * ----------------------------------------------------- */
-function PersonalInformationTab({ formData, isEditing, handleInputChange, handleDelete }) {
-  
-  // Section Title Component
-  const SectionTitle = ({ title }) => (
-    <h3 className="text-lg font-semibold text-slate-900 pb-2 border-b border-neutral-200 col-span-1 md:col-span-2">
-      {title}
-    </h3>
-  )
+function ContactInfoTab({
+  contact,
+  draft,
+  isEditing,
+  onStartEdit,
+  onCancelEdit,
+  onSaveEdit,
+  setDraft,
+  changeLog,
+  onHistoryClick,
+}) {
+  if (!contact) return null
+  const working = isEditing && draft ? draft : contact
+  const formattedDate =
+    working.dateOfBirth && !Number.isNaN(Date.parse(working.dateOfBirth))
+      ? new Date(working.dateOfBirth).toLocaleDateString('id-ID', {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric',
+        })
+      : '-'
 
-  return (
-    <div className="space-y-8">
-      {/* Form fields are now in a clean 2-column grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
-        <SectionTitle title="Contact Information" />
-        
-        <FormField id="phoneNumber" label="Phone Number">
-          <Input
-            id="phoneNumber"
-            type="tel"
-            value={formData.phoneNumber}
-            onChange={handleInputChange('phoneNumber')}
-            placeholder="+62 812 3456 7890"
-            disabled={!isEditing}
-          />
-        </FormField>
-        
-        <FormField id="emailAddress" label="Email Address">
-          <Input
-            id="emailAddress"
-            type="email"
-            value={formData.emailAddress}
-            onChange={handleInputChange('emailAddress')}
-            placeholder="name@company.com"
-            disabled={!isEditing}
-          />
-        </FormField>
+  const updateDraftField = (field, value) => {
+    if (!isEditing) return
+    setDraft((prev) => ({
+      ...prev,
+      [field]: value,
+    }))
+  }
 
-        <SectionTitle title="Personal Details" />
-        
-        <FormField id="placeOfBirth" label="Place of Birth">
-          <Input
-            id="placeOfBirth"
-            value={formData.placeOfBirth}
-            onChange={handleInputChange('placeOfBirth')}
-            placeholder="Jakarta"
-            disabled={!isEditing}
-          />
-        </FormField>
-        
-        <FormField id="dateOfBirth" label="Date of Birth">
-          <Input
-            id="dateOfBirth"
-            type="date"
-            value={formData.dateOfBirth}
-            onChange={handleInputChange('dateOfBirth')}
-            placeholder="dd/mm/yyyy"
-            icon={FaCalendarAlt}
-            disabled={!isEditing}
-          />
-        </FormField>
-        
-        <div className="md:col-span-2">
-          <FormField id="educationHistory" label="Education History">
-            <DebouncedTextArea
-              id="educationHistory"
-              value={formData.educationHistory}
-              onChange={handleInputChange('educationHistory')}
-              placeholder="e.g., MBA from Harvard Business School"
-              rows={3}
-              disabled={!isEditing}
-            />
-          </FormField>
-        </div>
-        
-        <div className="md:col-span-2">
-           <FormField id="hobbiesInterests" label="Hobbies & Interests">
-            <DebouncedTextArea
-              id="hobbiesInterests"
-              value={formData.hobbiesInterests}
-              onChange={handleInputChange('hobbiesInterests')}
-              placeholder="e.g., Golf, Reading, Photography"
-              rows={3}
-              disabled={!isEditing}
-            />
-          </FormField>
-        </div>
+  const handleEmailsChange = (value) => {
+    updateDraftField(
+      'emails',
+      value
+        .split('\n')
+        .map((email) => email.trim())
+        .filter(Boolean)
+    )
+  }
 
-        <SectionTitle title="Relationship & Role" />
-        
-        <FormField id="relationshipStatus" label="Relationship Status">
-          <Select
-            id="relationshipStatus"
-            value={formData.relationshipStatus}
-            onChange={handleInputChange('relationshipStatus')}
-            disabled={!isEditing}
-          >
-            <option value="">Select status...</option>
-            <option value="Warm">Warm</option>
-            <option value="Neutral">Neutral</option>
-            <option value="Cold">Cold</option>
-            <option value="Key Decision Maker">Key Decision Maker</option>
-          </Select>
-        </FormField>
-        
-        <FormField id="decisionRole" label="Decision Role">
-          <Select
-            id="decisionRole"
-            value={formData.decisionRole}
-            onChange={handleInputChange('decisionRole')}
-            disabled={!isEditing}
-          >
-            <option value="">Select role...</option>
-            <option value="Decision Maker">Decision Maker</option>
-            <option value="Influencer">Influencer</option>
-            <option value="Blocker">Blocker</option>
-            <option value="Champion">Champion</option>
-          </Select>
-        </FormField>
-      </div>
+  const handlePhoneChange = (index, key, value) => {
+    if (!isEditing) return
+    setDraft((prev) => {
+      const nextPhones = (prev.phones || []).map((phone, idx) =>
+        idx === index ? { ...phone, [key]: value } : phone
+      )
+      return { ...prev, phones: nextPhones }
+    })
+  }
 
-      {/* Remove Contact Button */}
-      {isEditing && (
-        <div className="flex justify-end pt-6 border-t border-neutral-200 mt-6">
-          <Button variant="danger" icon={FaTrash} onClick={handleDelete}>
-            Remove This Contact
-          </Button>
-        </div>
-      )}
-    </div>
-  )
-}
+  const addPhone = () => {
+    if (!isEditing) return
+    setDraft((prev) => ({
+      ...prev,
+      phones: [...(prev.phones || []), { label: 'Mobile', type: 'mobile', value: '' }],
+    }))
+  }
 
-/* -------------------------------------------------------
- * Tab 2: Activities
- * ----------------------------------------------------- */
-function ActivitiesTab({ activities }) {
-  const opportunityColumns = [
-    { key: 'name', label: 'Name' },
-    { key: 'stage', label: 'Stage', render: (opp) => <Tag variant="blue">{opp.stage}</Tag> },
-    { key: 'amount', label: 'Amount' },
-    { key: 'closeDate', label: 'Close Date' },
-  ]
-  
+  const removePhone = (index) => {
+    if (!isEditing) return
+    setDraft((prev) => ({
+      ...prev,
+      phones: (prev.phones || []).filter((_, idx) => idx !== index),
+    }))
+  }
+
+  const handleSocialChange = (platform, value) => {
+    if (!isEditing) return
+    setDraft((prev) => ({
+      ...prev,
+      socials: {
+        ...(prev.socials || {}),
+        [platform]: value,
+      },
+    }))
+  }
+
+  const latestChange = changeLog[0]
+
   return (
     <div className="space-y-6">
-      {/* This could be one or two sections. I'll add "Opportunities" here as well. */}
-      <div>
-        <h3 className="text-lg font-semibold text-slate-800 mb-3">Opportunities</h3>
-        <Table
-          columns={opportunityColumns}
-          data={DUMMY_OPPORTUNITIES} // This should be passed as a prop
-          rowKey="id"
-          onRowClick={(opp) => alert(`Navigating to Opportunity ${opp.id}`)}
-        />
-      </div>
-      
-      <div>
-        <h3 className="text-lg font-semibold text-slate-800 mb-3">Activity Timeline</h3>
-        <div className="space-y-4">
-          {activities.map(activity => (
-            <div key={activity.id} className="relative pl-6 pb-4 border-l-2 border-slate-200">
-              <span className="absolute -left-[5px] top-1 h-2 w-2 rounded-full bg-slate-400" />
-              <p className="text-xs text-slate-500 flex items-center gap-1.5"><FaClock /> {activity.date} - {activity.type}</p>
-              <p className="text-sm text-slate-700">{activity.summary}</p>
-            </div>
-          ))}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="space-y-0.5 text-sm text-neutral-500">
+          <p>
+            {latestChange
+              ? `Terakhir diperbarui ${new Date(latestChange.timestamp).toLocaleString('id-ID', {
+                  dateStyle: 'medium',
+                  timeStyle: 'short',
+                })} oleh ${latestChange.user}`
+              : 'Belum ada perubahan yang tersimpan'}
+          </p>
+        </div>
+        
+        <div className="flex flex-wrap gap-2">
+          <Button variant="secondary" size="sm" onClick={onHistoryClick} className="inline-flex items-center gap-2">
+            <FaHistory />
+            Riwayat
+          </Button>
+          
+          {isEditing ? (
+            <>
+              <Button variant="secondary" size="sm" onClick={onCancelEdit} className="inline-flex items-center gap-2">
+                <FaTimes />
+                Batal
+              </Button>
+              <Button variant="primary" size="sm" onClick={onSaveEdit} className="inline-flex items-center gap-2">
+                <FaSave />
+                Simpan Perubahan
+              </Button>
+            </>
+          ) : (
+            <Button variant="secondary" size="sm" onClick={onStartEdit} className="inline-flex items-center gap-2">
+              <FaEdit />
+              Edit Informasi
+            </Button>
+          )}
         </div>
       </div>
+      
+      <InfoSection title="Profil Utama" description="Informasi dasar dan status kontak.">
+        {isEditing ? (
+          // --- MODE EDIT ---
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="space-y-1">
+              <p className="text-xs uppercase text-neutral-500">Status Kontak</p>
+              <select
+                value={draft?.status || 'Aktif'}
+                onChange={(e) => updateDraftField('status', e.target.value)}
+                className="w-full rounded-xl border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#2C5CC5] bg-white"
+              >
+                <option value="Aktif">Aktif</option>
+                <option value="Tidak Aktif">Tidak Aktif</option>
+              </select>
+            </div>
+            
+            <div className="space-y-1">
+              <p className="text-xs uppercase text-neutral-500">Relasi</p>
+              <select
+                value={draft?.relationshipStatus || 'Neutral'}
+                onChange={(e) => updateDraftField('relationshipStatus', e.target.value)}
+                className="w-full rounded-xl border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#2C5CC5] bg-white"
+              >
+                <option value="Promotor">Promotor</option>
+                <option value="Neutral">Neutral</option>
+                <option value="Detractor">Detractor</option>
+              </select>
+            </div>
+            
+            <div className="space-y-1">
+              <p className="text-xs uppercase text-neutral-500">Peran</p>
+              <select
+                value={draft?.decisionRole || 'User'}
+                onChange={(e) => updateDraftField('decisionRole', e.target.value)}
+                className="w-full rounded-xl border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#2C5CC5] bg-white"
+              >
+                <option value="Decision Maker">Decision Maker</option>
+                <option value="Influencer">Influencer</option>
+                <option value="User">User</option>
+              </select>
+            </div>
+          </div>
+        ) : (
+          // --- MODE LIHAT ---
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-neutral-700">
+            <div className="space-y-1">
+              <p className="text-xs uppercase text-neutral-500">Status Kontak</p>
+              <div className="font-semibold">
+                <Badge variant={statusToVariant[contact.status] || 'neutral'}>{contact.status}</Badge>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs uppercase text-neutral-500">Relasi</p>
+              <div className="font-semibold">
+                 <span
+                  className={`inline-flex items-center rounded-full border px-3 py-0.5 text-xs font-semibold ${
+                    relationshipChipStyles[contact.relationshipStatus] || 'bg-neutral-100 text-neutral-700 border-neutral-200'
+                  }`}
+                >
+                  {contact.relationshipStatus}
+                </span>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs uppercase text-neutral-500">Peran</p>
+              <div className="font-semibold">
+                 <span
+                  className={`inline-flex items-center rounded-full border px-3 py-0.5 text-xs font-semibold ${
+                    decisionRoleChipStyles[contact.decisionRole] ||
+                    'bg-neutral-100 text-neutral-700 border-neutral-200'
+                  }`}
+                >
+                  {contact.decisionRole}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+      </InfoSection>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <InfoSection title="Email" description="Alamat email yang dapat dihubungi.">
+          {isEditing ? (
+            <textarea
+              value={(draft?.emails || []).join('\n')}
+              onChange={(e) => handleEmailsChange(e.target.value)}
+              rows={working.emails?.length > 2 ? working.emails.length : 3}
+              className="w-full rounded-2xl border border-neutral-200 bg-white p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2C5CC5]/30"
+              placeholder="Masukkan satu email per baris"
+            />
+          ) : (
+            <div className="space-y-3">
+              {(contact.emails || []).map((email) => (
+                <div
+                  key={email}
+                  className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm text-neutral-700"
+                >
+                  {/* PERUBAHAN: Ikon diberi warna */}
+                  <FaEnvelope className="text-blue-500" />
+                  <a href={`mailto:${email}`} className="hover:text-[#2C5CC5]">
+                    {email}
+                  </a>
+                </div>
+              ))}
+              {(contact.emails || []).length === 0 && (
+                 <p className="text-sm text-neutral-500">Belum ada data email.</p>
+              )}
+            </div>
+          )}
+        </InfoSection>
+
+        <InfoSection title="Nomor Telepon" description="Kategori nomor sesuai preferensi kontak.">
+          {isEditing ? (
+            <div className="space-y-4">
+              {(draft?.phones || []).map((phone, idx) => (
+                <div key={`phone-${idx}`} className="space-y-2 rounded-2xl border border-neutral-200 bg-white p-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <input
+                      type="text"
+                      value={phone.label}
+                      onChange={(e) => handlePhoneChange(idx, 'label', e.target.value)}
+                      className="rounded-xl border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#2C5CC5]"
+                      placeholder="Label"
+                    />
+                    <select
+                      value={phone.type}
+                      onChange={(e) => handlePhoneChange(idx, 'type', e.target.value)}
+                      className="rounded-xl border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#2C5CC5] bg-white"
+                    >
+                      <option value="mobile">Mobile</option>
+                      <option value="office">Office</option>
+                      <option value="whatsapp">WhatsApp</option>
+                    </select>
+                    <input
+                      type="text"
+                      value={phone.value}
+                      onChange={(e) => handlePhoneChange(idx, 'value', e.target.value)}
+                      className="rounded-xl border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#2C5CC5]"
+                      placeholder="+62 ..."
+                    />
+                  </div>
+                  <div className="text-right">
+                    <Button variant="ghost" size="sm" onClick={() => removePhone(idx)}>
+                      Hapus
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              <Button variant="secondary" size="sm" onClick={addPhone}>
+                Tambah Nomor
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {(contact.phones || []).map((phone) => (
+                <div
+                  key={`${phone.label}-${phone.value}`}
+                  className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm"
+                >
+                  <div className="flex items-center gap-3 text-neutral-700">
+                    {/* PERUBAHAN: Ikon diberi warna hijau (sesuai badge whatsapp) */}
+                    <FaPhone className="text-green-600" />
+                    <div>
+                      <p className="font-semibold">{phone.value}</p>
+                      <p className="text-xs text-neutral-500">{phone.label}</p>
+                    </div>
+                  </div>
+                  <span
+                    className={`inline-flex items-center rounded-full border px-3 py-0.5 text-[11px] font-semibold capitalize ${
+                      phoneTypeChipStyles[phone.type] || 'bg-neutral-100 text-neutral-700 border-neutral-200'
+                    }`}
+                  >
+                    {phone.type}
+                  </span>
+                </div>
+              ))}
+               {(contact.phones || []).length === 0 && (
+                 <p className="text-sm text-neutral-500">Belum ada data telepon.</p>
+              )}
+            </div>
+          )}
+        </InfoSection>
+      </div>
+
+      <InfoSection title="Media Sosial" description="Kanal media sosial yang aktif digunakan.">
+        {isEditing ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {SOCIAL_PLATFORMS.map((platform) => (
+              <div key={platform.key} className="space-y-1">
+                <label className="text-xs font-semibold text-neutral-500">{platform.label}</label>
+                <input
+                  type="text"
+                  value={draft?.socials?.[platform.key] || ''}
+                  onChange={(e) => handleSocialChange(platform.key, e.target.value)}
+                  className="w-full rounded-xl border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#2C5CC5]"
+                  placeholder={`URL ${platform.label}`}
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-3">
+            {SOCIAL_PLATFORMS.filter((platform) => contact.socials?.[platform.key]).map((platform) => {
+              const Icon = platform.icon
+              const value = contact.socials[platform.key]
+              const url =
+                value.startsWith('http://') || value.startsWith('https://')
+                  ? value
+                  : `https://${value}`
+              return (
+                <a
+                  key={platform.key}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm text-neutral-700 hover:border-[#2C5CC5]"
+                >
+                  {/* PERUBAHAN: Ikon diberi warna (default) */}
+                  <Icon className="text-neutral-500" /> 
+                  {platform.label}
+                </a>
+              )
+            })}
+            {SOCIAL_PLATFORMS.filter((platform) => contact.socials?.[platform.key]).length === 0 && (
+              <p className="text-sm text-neutral-500">Belum ada data media sosial.</p>
+            )}
+          </div>
+        )}
+      </InfoSection>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <InfoSection title="Alamat" description="Alamat kantor atau domisili utama.">
+          {isEditing ? (
+            <textarea
+              value={draft?.address || ''}
+              onChange={(e) => updateDraftField('address', e.target.value)}
+              rows={3}
+              className="w-full rounded-2xl border border-neutral-200 bg-white p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2C5CC5]/30"
+              placeholder="Tulis alamat lengkap..."
+            />
+          ) : (
+            <div className="flex items-start gap-3 text-sm text-neutral-700">
+              {/* PERUBAHAN: Ikon diberi warna */}
+              <FaMapMarkerAlt className="text-red-500 mt-1" />
+              <p>{contact.address || '-'}</p>
+            </div>
+          )}
+        </InfoSection>
+
+        <InfoSection title="Preferensi Kontak" description="Cara terbaik untuk menghubungi kontak ini.">
+          {isEditing ? (
+            <div className="space-y-2 text-sm">
+              <input
+                type="text"
+                value={draft?.contactPreferences?.bestTime || ''}
+                onChange={(e) =>
+                  setDraft((prev) => ({
+                    ...prev,
+                    contactPreferences: {
+                      ...prev.contactPreferences,
+                      bestTime: e.target.value,
+                    },
+                  }))
+                }
+                className="w-full rounded-xl border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#2C5CC5]"
+                placeholder="Waktu terbaik dihubungi"
+              />
+              <input
+                type="text"
+                value={draft?.contactPreferences?.channel || ''}
+                onChange={(e) =>
+                  setDraft((prev) => ({
+                    ...prev,
+                    contactPreferences: {
+                      ...prev.contactPreferences,
+                      channel: e.target.value,
+                    },
+                  }))
+                }
+                className="w-full rounded-xl border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#2C5CC5]"
+                placeholder="Media komunikasi"
+              />
+            </div>
+          ) : (
+            <div className="text-sm text-neutral-700 space-y-1.5">
+              <p>
+                <span className="text-neutral-500">Waktu terbaik:</span> {contact.contactPreferences.bestTime}
+              </p>
+              <p>
+                <span className="text-neutral-500">Media komunikasi:</span> {contact.contactPreferences.channel}
+              </p>
+            </div>
+          )}
+        </InfoSection>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <InfoSection title="Data Pribadi" description="Informasi personal untuk pendekatan yang relevan.">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-neutral-700">
+            <div className="space-y-1">
+              <p className="text-xs uppercase text-neutral-500">Tempat Lahir</p>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={draft?.placeOfBirth || ''}
+                  onChange={(e) => updateDraftField('placeOfBirth', e.target.value)}
+                  className="w-full rounded-xl border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#2C5CC5]"
+                  placeholder="Tempat lahir"
+                />
+              ) : (
+                <p className="font-semibold">{contact.placeOfBirth || '-'}</p>
+              )}
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs uppercase text-neutral-500">Tanggal Lahir</p>
+              {isEditing ? (
+                <input
+                  type="date"
+                  value={draft?.dateOfBirth || ''}
+                  onChange={(e) => updateDraftField('dateOfBirth', e.target.value)}
+                  className="w-full rounded-xl border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#2C5CC5]"
+                />
+              ) : (
+                <p className="font-semibold flex items-center gap-2">
+                  {/* PERUBAHAN: Ikon diberi warna */}
+                  <FaRegCalendarAlt className="text-purple-500" />
+                  {formattedDate}
+                </p>
+              )}
+            </div>
+          </div>
+        </InfoSection>
+
+        <InfoSection title="Riwayat & Minat" description="Gunakan untuk membangun koneksi yang lebih dalam.">
+          {isEditing ? (
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <p className="text-xs uppercase text-neutral-500">Riwayat Pendidikan</p>
+                <textarea
+                  value={draft?.educationHistory || ''}
+                  onChange={(e) => updateDraftField('educationHistory', e.target.value)}
+                  rows={2}
+                  className="w-full rounded-xl border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#2C5CC5]"
+                  placeholder="Contoh: S2 Manajemen, Universitas Indonesia"
+                />
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs uppercase text-neutral-500">Hobi & Ketertarikan</p>
+                <textarea
+                  value={draft?.hobbiesInterests || ''}
+                  onChange={(e) => updateDraftField('hobbiesInterests', e.target.value)}
+                  rows={2}
+                  className="w-full rounded-xl border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#2C5CC5]"
+                  placeholder="Contoh: golf, fotografi, kopi"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3 text-sm text-neutral-700">
+              <div>
+                <p className="text-xs uppercase text-neutral-500">Riwayat Pendidikan</p>
+                <p className="font-semibold">{contact.educationHistory || '-'}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase text-neutral-500">Hobi & Ketertarikan</p>
+                <p className="font-semibold">{contact.hobbiesInterests || '-'}</p>
+              </div>
+            </div>
+          )}
+        </InfoSection>
+      </div>
+      
     </div>
   )
 }
 
-/* -------------------------------------------------------
- * Tab 3: Notes
- * ----------------------------------------------------- */
-function NotesTab({ notes }) {
+function InteractionsTab({ interactions, onNavigate }) {
+  if (!interactions || interactions.length === 0) {
+    return (
+      <EmptyState
+        title="Belum ada interaksi"
+        subtitle="Belum ada aktivitas yang melibatkan kontak ini."
+        action={
+          <Button variant="primary" onClick={onNavigate}>
+            Tambah Aktivitas
+          </Button>
+        }
+      />
+    )
+  }
+
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-slate-800 mb-3">Add a New Note</h3>
-      <DebouncedTextArea
-        id="new-note"
-        value=""
-        onChange={() => {}} // Handle new note state
-        placeholder="Add a new note..."
-        rows={4}
-      />
-      <Button variant="primary" size="sm">Save Note</Button>
-      <hr />
-      
-      <h3 className="text-lg font-semibold text-slate-800 mb-3">Past Notes</h3>
-      {notes.map(note => (
-        <div key={note.id} className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-          <p className="text-xs text-slate-500 mb-1">{note.user} - {note.date}</p>
-          <p className="text-sm text-slate-700">{note.note}</p>
+      {interactions.map((interaction) => (
+        <div
+          key={interaction.id}
+          className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm flex flex-col gap-3"
+        >
+          <div className="flex flex-wrap items-center gap-3 justify-between">
+            <div className="space-y-1">
+              {/* PERUBAHAN: Judul interaksi diberi warna */}
+              <p className="text-sm font-semibold text-[#2C5CC5]">{interaction.type}</p>
+              <p className="text-xs text-neutral-500 flex items-center gap-2">
+                <FaRegCalendarAlt className="text-neutral-400" />
+                {interaction.date} · {interaction.channel}
+              </p>
+            </div>
+            <Button variant="secondary" size="sm" onClick={onNavigate} className="inline-flex items-center gap-2">
+              <FaShareAlt />
+              Lihat di Aktivitas
+            </Button>
+          </div>
+          <p className="text-sm text-neutral-700">{interaction.summary}</p>
         </div>
       ))}
+    </div>
+  )
+}
+
+function NotesTab({ notes, newNote, onChangeNote, onAddNote }) {
+  return (
+    <div className="space-y-6">
+      {/* PERUBAHAN: Judul di tab catatan juga diberi warna */}
+      <InfoSection title="Tambah Catatan" description="Bagi insight terbaru untuk tim.">
+        <textarea
+          value={newNote}
+          onChange={(e) => onChangeNote(e.target.value)}
+          rows={4}
+          className="w-full rounded-2xl border border-neutral-200 bg-white p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2C5CC5]/30"
+          placeholder="Contoh: kontak suka komunikasi singkat melalui WhatsApp, hindari hari Senin."
+        />
+        <div className="flex justify-end">
+          <Button variant="primary" size="sm" onClick={onAddNote}>
+            Simpan Catatan
+          </Button>
+        </div>
+      </InfoSection>
+
+      <div className="space-y-4">
+        <p className="text-sm font-semibold text-[#2C5CC5]">Catatan Sebelumnya</p>
+        {notes.length === 0 ? (
+          <p className="text-sm text-neutral-500">Belum ada catatan tersimpan.</p>
+        ) : (
+          notes.map((note) => (
+            <div key={note.id} className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm space-y-1">
+              <p className="text-xs text-neutral-500">
+                {note.user} • {note.date}
+              </p>
+              <p className="text-sm text-neutral-800">{note.note}</p>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   )
 }
