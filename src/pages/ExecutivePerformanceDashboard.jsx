@@ -115,7 +115,7 @@ export default function ExecutivePerformanceDashboard() {
 
   const regionalStats = useMemo(() => aggregateByRegion(filteredAMs), [filteredAMs])
 
-  // use non-mutating sort to find worst region
+  // non-mutating sort to find worst region
   const worstRegion = useMemo(() => {
     if (!regionalStats.length) return null
     return [...regionalStats].sort((a, b) => a.avgProfile - b.avgProfile)[0]
@@ -137,45 +137,57 @@ export default function ExecutivePerformanceDashboard() {
     setInsightInput('')
   }
 
-  const goToManagerDashboard = () => {
-    navigate('/manager')
+  // accept region to drill down
+  const goToManagerDashboard = (region) => {
+    const qs = region ? `?region=${encodeURIComponent(region)}` : ''
+    navigate(`/executive/region${qs}`)
   }
 
+
+  /* -----------------------------------------------
+   * LAYOUT: full-width, full-height feel
+   * mirrors ContactManagement structure
+   * --------------------------------------------- */
   return (
-    <div className="max-w-6xl mx-auto px-4 pb-14 space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       <PageHeader
-        variant="hero"
+        // Use the same simple header style like ContactManagement
         title="Executive Performance Overview"
         subtitle="Enterprise Information System (EIS) untuk memantau kinerja Account Manager skala nasional."
         icon={FaChartLine}
       />
 
-      <Card className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="space-y-1">
-          <p className="text-sm font-semibold text-neutral-900">Filter & Drill-down</p>
-          <p className="text-xs text-neutral-500">
-            {filteredAMs.length} Account Manager ditampilkan ({regionFilter === 'Semua Indonesia' ? 'Nasional' : regionFilter})
-          </p>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-          <Select value={regionFilter} onChange={(e) => setRegionFilter(e.target.value)}>
-            {REGIONS.map((region) => (
-              <option key={region} value={region}>
-                {region}
-              </option>
-            ))}
-          </Select>
-          <SearchInput value={search} onChange={setSearch} placeholder="Cari AM / Witel" variant="subtle" />
-        </div>
-      </Card>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+      {/* Top Stats — same rhythm as ContactManagement */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
         <StatsCard label="Total Account Manager" value={nationalSummary.totalAM.toLocaleString()} icon={FaUserTie} />
         <StatsCard label="Total Visit / Bulan" value={nationalSummary.totalVisits.toLocaleString()} icon={FaTasks} />
         <StatsCard label="Avg Profile Completion" value={`${nationalSummary.avgProfile}%`} icon={FaChartBar} />
         <StatsCard label="Avg Data Freshness" value={`${nationalSummary.avgFreshness} hari`} icon={FaSyncAlt} />
       </div>
 
+      {/* Filters Card — aligned with ContactManagement filter card layout */}
+      <Card className="bg-white">
+        <div className="flex flex-col md:flex-row gap-3 md:gap-4 md:items-center md:justify-between">
+          <div className="space-y-1">
+            <p className="text-sm font-semibold text-neutral-900">Filter & Drill-down</p>
+            <p className="text-xs text-neutral-500">
+              {filteredAMs.length} Account Manager ditampilkan ({regionFilter === 'Semua Indonesia' ? 'Nasional' : regionFilter})
+            </p>
+          </div>
+          <div className="flex-1 flex flex-col md:flex-row gap-3 md:gap-4">
+            <Select value={regionFilter} onChange={(e) => setRegionFilter(e.target.value)}>
+              {REGIONS.map((region) => (
+                <option key={region} value={region}>
+                  {region}
+                </option>
+              ))}
+            </Select>
+            <SearchInput value={search} onChange={setSearch} placeholder="Cari AM / Witel" />
+          </div>
+        </div>
+      </Card>
+
+      {/* Health Status + Region Cards */}
       <Card className="space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -190,7 +202,7 @@ export default function ExecutivePerformanceDashboard() {
         </div>
 
         {/* Region cards — clickable to ManagerPerformanceDashboard */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {regionalStats.map((region) => {
             const { status, tone } = getHealthStatus(region.avgProfile, region.avgFreshness)
             return (
@@ -218,53 +230,57 @@ export default function ExecutivePerformanceDashboard() {
         </div>
       </Card>
 
-      <Card className="space-y-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-lg font-semibold text-neutral-900">Perbandingan Regional - Profil</p>
-          <span className="text-xs text-neutral-500">Skala normalisasi: {chartMaxProfile}%</span>
-        </div>
-        <div className="space-y-3">
-          {regionalStats.map((region) => (
-            <div key={region.region} className="space-y-1">
-              <div className="flex justify-between text-xs text-neutral-500">
-                <span>{region.region}</span>
-                <span>{region.avgProfile}%</span>
+      {/* Comparison Bars */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+        <Card className="space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-lg font-semibold text-neutral-900">Perbandingan Regional - Profil</p>
+            <span className="text-xs text-neutral-500">Skala normalisasi: {chartMaxProfile}%</span>
+          </div>
+          <div className="space-y-3">
+            {regionalStats.map((region) => (
+              <div key={region.region} className="space-y-1">
+                <div className="flex justify-between text-xs text-neutral-500">
+                  <span>{region.region}</span>
+                  <span>{region.avgProfile}%</span>
+                </div>
+                <div className="h-3 rounded-full bg-neutral-100 overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-[#2C5CC5] to-[#6D28D9]"
+                    style={{ width: `${(region.avgProfile / chartMaxProfile) * 100}%` }}
+                  />
+                </div>
               </div>
-              <div className="h-3 rounded-full bg-neutral-100 overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-[#2C5CC5] to-[#6D28D9]"
-                  style={{ width: `${(region.avgProfile / chartMaxProfile) * 100}%` }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
+            ))}
+          </div>
+        </Card>
 
-      <Card className="space-y-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-lg font-semibold text-neutral-900">Perbandingan Regional - Visit Frequency</p>
-          <span className="text-xs text-neutral-500">Skala normalisasi: {chartMaxActivities} aktivitas</span>
-        </div>
-        <div className="space-y-3">
-          {regionalStats.map((region) => (
-            <div key={region.region} className="space-y-1">
-              <div className="flex justify-between text-xs text-neutral-500">
-                <span>{region.region}</span>
-                <span>{region.avgActivities} / bulan</span>
+        <Card className="space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-lg font-semibold text-neutral-900">Perbandingan Regional - Visit Frequency</p>
+            <span className="text-xs text-neutral-500">Skala normalisasi: {chartMaxActivities} aktivitas</span>
+          </div>
+          <div className="space-y-3">
+            {regionalStats.map((region) => (
+              <div key={region.region} className="space-y-1">
+                <div className="flex justify-between text-xs text-neutral-500">
+                  <span>{region.region}</span>
+                  <span>{region.avgActivities} / bulan</span>
+                </div>
+                <div className="h-3 rounded-full bg-neutral-100 overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-[#F97316] to-[#EA580C]"
+                    style={{ width: `${(region.avgActivities / chartMaxActivities) * 100}%` }}
+                  />
+                </div>
               </div>
-              <div className="h-3 rounded-full bg-neutral-100 overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-[#F97316] to-[#EA580C]"
-                  style={{ width: `${(region.avgActivities / chartMaxActivities) * 100}%` }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
+            ))}
+          </div>
+        </Card>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      {/* Bottom: Health Distribution + Insights */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         <Card className="space-y-4">
           <div className="flex items-center gap-2">
             <FaChartPie className="text-neutral-500" />

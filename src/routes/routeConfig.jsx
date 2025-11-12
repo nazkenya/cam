@@ -15,6 +15,8 @@ import ContactDetail from '../pages/ContactDetail'
 import ActivitiesPage from '../pages/ActivitiesPage'
 import ManagerPerformanceDashboard from '../pages/ManagerPerformanceDashboard'
 import ExecutivePerformanceDashboard from '../pages/ExecutivePerformanceDashboard'
+import ManagerDashboard from '@pages/ManagerDashboard'
+import ExecutiveRegionPerformance from '@pages/ExecutiveRegionPerformance'
 
 // Define routes and which roles can access them.
 // Add your new role to the arrays below as needed.
@@ -39,6 +41,8 @@ export const routes = [
   { path: '/manager/performance', element: <ManagerPerformanceDashboard />, roles: [ROLES.manager, ROLES.admin] },
   { path: '/manager/account-managers', element: <AccountManagers />, roles: [ROLES.manager, ROLES.admin] },
   { path: '/executive', element: <ExecutivePerformanceDashboard />, roles: [ROLES.admin] },
+  { path: '/executive/region', element: <ExecutiveRegionPerformance />, roles: [ROLES.admin] },
+
   // Examples for future pages:
   // { path: '/produk', element: <ProdukPage />, roles: [ROLES.admin, ROLES.manager] },
   // { path: '/monitoring', element: <MonitoringPage />, roles: [ROLES.admin, ROLES.manager] },

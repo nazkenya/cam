@@ -121,7 +121,6 @@ export default function ManagerPerformanceDashboard() {
     setSelectedAM(am)
     setShowActivityModal(true)
   }
-
   const closeActivities = () => {
     setSelectedAM(null)
     setShowActivityModal(false)
@@ -129,7 +128,7 @@ export default function ManagerPerformanceDashboard() {
 
   const renderSummaryTab = () => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
         <StatsCard label="Rata-rata Kelengkapan Profil" value={`${summary.avgCompletion}%`} icon={FaUserTie} />
         <StatsCard label="Aktivitas/Bulan per AM" value={`${summary.avgActivities}`} icon={FaTasks} />
         <StatsCard label="Rata-rata Kesegaran Data" value={`${summary.avgFreshness} hari`} icon={FaSyncAlt} />
@@ -167,7 +166,7 @@ export default function ManagerPerformanceDashboard() {
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         <Card className="space-y-4 lg:col-span-2">
           <p className="text-lg font-semibold text-neutral-900">Top performer minggu ini</p>
           <div className="space-y-3">
@@ -235,7 +234,7 @@ export default function ManagerPerformanceDashboard() {
 
   const renderProfileTab = () => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         <Card className="space-y-1">
           <p className="text-xs text-neutral-500 uppercase tracking-wide">Rata-rata completion</p>
           <p className="text-2xl font-semibold text-neutral-900">{summary.avgCompletion}%</p>
@@ -300,7 +299,7 @@ export default function ManagerPerformanceDashboard() {
 
   const renderActivityTab = () => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         <Card className="space-y-1">
           <p className="text-xs text-neutral-500 uppercase tracking-wide">Rata-rata aktivitas</p>
           <p className="text-2xl font-semibold text-neutral-900">{summary.avgActivities} / bulan</p>
@@ -353,7 +352,7 @@ export default function ManagerPerformanceDashboard() {
 
   const renderFreshnessTab = () => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         <Card className="space-y-1">
           <p className="text-xs text-neutral-500 uppercase tracking-wide">Rata-rata kesegaran</p>
           <p className="text-2xl font-semibold text-neutral-900">{summary.avgFreshness} hari</p>
@@ -412,10 +411,10 @@ export default function ManagerPerformanceDashboard() {
     </div>
   )
 
+  // === FULL-WIDTH LAYOUT + unified header & spacing (like ContactManagement) ===
   return (
-    <div className="max-w-6xl mx-auto px-4 pb-14 space-y-7 animate-fade-in">
+    <div className="space-y-6 pb-14 animate-fade-in">
       <PageHeader
-        variant="hero"
         title="Dashboard Kinerja Account Manager"
         subtitle="Management Information System (MIS) untuk memantau performa tim di wilayah Anda."
         icon={FaChartLine}
