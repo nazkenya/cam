@@ -9,11 +9,12 @@ import ValidationPage from '../pages/ValidationPage'
 import AccountProfile from '../pages/AccountProfile'
 import SalesPlanDetail from '../pages/SalesPlanDetail'
 import { ROLES } from '../auth/roles'
-import ManagerDashboard from '../pages/ManagerDashboard'
 import AccountManagers from '../pages/AccountManagers'
 import ContactManagement from '../pages/ContactManagement'
 import ContactDetail from '../pages/ContactDetail'
 import ActivitiesPage from '../pages/ActivitiesPage'
+import ManagerPerformanceDashboard from '../pages/ManagerPerformanceDashboard'
+import ExecutivePerformanceDashboard from '../pages/ExecutivePerformanceDashboard'
 
 // Define routes and which roles can access them.
 // Add your new role to the arrays below as needed.
@@ -34,8 +35,10 @@ export const routes = [
   { path: '/ecrm-workspace', element: <EcrmWorkspace />, roles: [ROLES.admin] },
   { path: '/ecrm-workspace/validation', element: <ValidationPage />, roles: [ROLES.admin] },
   // Manager specific tracking dashboard
-  { path: '/manager', element: <ManagerDashboard />, roles: [ROLES.manager] },
-  { path: '/manager/account-managers', element: <AccountManagers />, roles: [ROLES.manager] },
+  { path: '/manager', element: <ManagerPerformanceDashboard />, roles: [ROLES.manager, ROLES.admin] },
+  { path: '/manager/performance', element: <ManagerPerformanceDashboard />, roles: [ROLES.manager, ROLES.admin] },
+  { path: '/manager/account-managers', element: <AccountManagers />, roles: [ROLES.manager, ROLES.admin] },
+  { path: '/executive', element: <ExecutivePerformanceDashboard />, roles: [ROLES.admin] },
   // Examples for future pages:
   // { path: '/produk', element: <ProdukPage />, roles: [ROLES.admin, ROLES.manager] },
   // { path: '/monitoring', element: <MonitoringPage />, roles: [ROLES.admin, ROLES.manager] },

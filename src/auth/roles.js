@@ -4,7 +4,6 @@ export const ROLES = {
   admin: 'admin',
   sales: 'sales',
   viewer: 'viewer',
-  // Add your new role key:
   manager: 'manager',
 }
 

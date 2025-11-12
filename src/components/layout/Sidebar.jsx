@@ -33,6 +33,7 @@ const MENU = {
     { to: '/partnership', label: 'Partnership', icon: FaHandshake },
     { to: '/aktivitas', label: 'Aktivitas', icon: FaChartLine },
     { to: '/ecrm-workspace', label: 'ECRM Workspace', icon: FaChartLine },
+    { to: '/executive', label: 'Executive Dashboard', icon: FaChartLine },
   ],
   [ROLES.sales]: [
     { to: '/customers', label: 'Pelanggan', icon: FaUsers },
@@ -50,6 +51,7 @@ const MENU = {
       icon: FaFirefoxBrowser, 
       
       subMenu: [
+        { to: '/manager', label: 'Dashboard Kinerja', icon: FaChartLine },
         { to: '/customers', label: 'Pelanggan', icon: FaUsers },
         { to: '/ecrm-workspace', label: 'Update AM', icon: FaChartLine },
         { to: '/produk', label: 'Produk & Solusi', icon: FaBoxOpen },
