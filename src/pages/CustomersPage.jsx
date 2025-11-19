@@ -145,7 +145,6 @@ export default function CustomersPage() {
             <span className="text-neutral-500"> dari {total} Pelanggan</span>
 
             <div className="text-xs text-neutral-400 mt-2 space-y-0.5">
-              <p>Source: Daman BUD, ERM dan MyTEnS</p>
               <p>Terakhir diperbarui 25 Agu 2025, 09:24 WIB</p>
             </div>
           </div>
