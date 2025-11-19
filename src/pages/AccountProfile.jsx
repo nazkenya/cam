@@ -26,6 +26,13 @@ import SwotAnalysis from '../components/analysis/SwotAnalysis'
 import IndustryValueChainAnalysis from '../components/analysis/IndustryValueChainAnalysis'
 import Modal from '../components/ui/Modal'
 import { FiEdit3 } from 'react-icons/fi'
+import { FaThLarge } from 'react-icons/fa'
+import BusinessModelCanvas from '../components/analysis/BusinessModelCanvas'
+import { FaExclamationTriangle } from 'react-icons/fa'
+import IndustryValueChainGapAnalysis from '../components/analysis/IndustryValueChainGapAnalysis'
+import EndCustomerProfile from '../components/analysis/EndCustomerProfile'
+
+
 
 
 
@@ -732,15 +739,103 @@ const history = React.useMemo(() => {
                       <Field idFor="witel" label="Wilayah"><ViewOrEdit editing={isEditing} view={<div className="text-sm">{formData.witel || '—'}</div>}><DebouncedTextInput id="witel" value={formData.witel} onChange={v => setField('witel', v)} placeholder="e.g., Witel Jakarta" /></ViewOrEdit></Field>
                     </Group>
                     <Group title="Contact">
-                      <Field idFor="telephone" label="Telepon"><ViewOrEdit editing={isEditing} view={<div className="text-sm">{formData.telephone || '—'}</div>}><DebouncedTextInput id="telephone" value={formData.telephone} onChange={v => setField('telephone', v)} placeholder="e.g., +62 21 555 123" /></ViewOrEdit></Field>
-                      <Field idFor="website" label="Website"><ViewOrEdit editing={isEditing} view={formData.website ? (
-                        <a href={formData.website} target="_blank" rel="noreferrer" className="text-[#2C5CC5] hover:underline break-all whitespace-normal leading-5">{formData.website}</a>
-                      ) : (
-                        <span className="text-neutral-500">—</span>
-                      )}><DebouncedTextInput id="website" type="url" value={formData.website} onChange={v => setField('website', v)} placeholder="https://example.co.id" /></ViewOrEdit></Field>
-                      <Field idFor="email" label="Email"><ViewOrEdit editing={isEditing} view={<div className="text-sm">{formData.email || '—'}</div>}><DebouncedTextInput id="email" type="email" value={formData.email} onChange={v => setField('email', v)} placeholder="info@example.co.id" /></ViewOrEdit></Field>
-                      <Field idFor="address" label="Alamat" className="sm:col-span-2"><ViewOrEdit editing={isEditing} view={<span className="leading-5 whitespace-pre-wrap break-words">{formData.address || '—'}</span>}><DebouncedTextArea id="address" value={formData.address} onChange={v => setField('address', v)} rows={2} placeholder="Street, City, Province, Postal Code" /></ViewOrEdit></Field>
-                    </Group>
+  <Field idFor="telephone" label="Telepon">
+    <ViewOrEdit
+      editing={isEditing}
+      view={<div className="text-sm">{formData.telephone || '—'}</div>}
+    >
+      <DebouncedTextInput
+        id="telephone"
+        value={formData.telephone}
+        onChange={v => setField('telephone', v)}
+        placeholder="e.g., +62 21 555 123"
+      />
+    </ViewOrEdit>
+  </Field>
+
+  <Field idFor="website" label="Website">
+    <ViewOrEdit
+      editing={isEditing}
+      view={
+        formData.website ? (
+          <a
+            href={formData.website}
+            target="_blank"
+            rel="noreferrer"
+            className="text-[#2C5CC5] hover:underline break-all whitespace-normal leading-5"
+          >
+            {formData.website}
+          </a>
+        ) : (
+          <span className="text-neutral-500">—</span>
+        )
+      }
+    >
+      <DebouncedTextInput
+        id="website"
+        type="url"
+        value={formData.website}
+        onChange={v => setField('website', v)}
+        placeholder="https://example.co.id"
+      />
+    </ViewOrEdit>
+  </Field>
+
+  <Field idFor="email" label="Email">
+    <ViewOrEdit
+      editing={isEditing}
+      view={<div className="text-sm">{formData.email || '—'}</div>}
+    >
+      <DebouncedTextInput
+        id="email"
+        type="email"
+        value={formData.email}
+        onChange={v => setField('email', v)}
+        placeholder="info@example.co.id"
+      />
+    </ViewOrEdit>
+  </Field>
+
+  {/* 🔹 Field baru: Jumlah Kantor Cabang */}
+  <Field idFor="branchCount" label="Jumlah Kantor Cabang">
+    <ViewOrEdit
+      editing={isEditing}
+      view={
+        <div className="text-sm">
+          {formData.branchCount || '—'}
+        </div>
+      }
+    >
+      <DebouncedTextInput
+        id="branchCount"
+        type="number"
+        value={formData.branchCount}
+        onChange={v => setField('branchCount', v)}
+        placeholder="contoh: 12"
+      />
+    </ViewOrEdit>
+  </Field>
+
+  <Field idFor="address" label="Alamat" className="sm:col-span-2">
+    <ViewOrEdit
+      editing={isEditing}
+      view={
+        <span className="leading-5 whitespace-pre-wrap break-words">
+          {formData.address || '—'}
+        </span>
+      }
+    >
+      <DebouncedTextArea
+        id="address"
+        value={formData.address}
+        onChange={v => setField('address', v)}
+        rows={2}
+        placeholder="Street, City, Province, Postal Code"
+      />
+    </ViewOrEdit>
+  </Field>
+</Group>
+
                     <Group title="Meta">
                       <Field idFor="priorityLevel" label="Level Prioritas"><ViewOrEdit editing={isEditing} view={<div className="text-sm">{formData.priorityLevel || '—'}</div>}>
                         <Select value={formData.priorityLevel} onChange={e => setField('priorityLevel', e.target.value)} id="priorityLevel">
@@ -848,6 +943,24 @@ const history = React.useMemo(() => {
                     {isEditing && (
                       <Button type="button" variant="secondary" size="sm" onClick={addPic} className="text-[#2C5CC5]"> <FiPlus className="w-4 h-4" /> Add PIC</Button>
                     )}
+                  </div>
+                )}
+              </TemplateSection>
+
+              <TemplateSection
+                secId="template-end-customer"
+                title="End-Customer Profile"
+                icon={FaUsers}
+              >
+                {(isEditing) => (
+                  <div className="space-y-2">
+                    <div className="sm:col-span-2">
+                      <EndCustomerProfile
+                        formData={formData}
+                        setField={setField}
+                        isEditing={isEditing}
+                      />
+                    </div>
                   </div>
                 )}
               </TemplateSection>
@@ -964,6 +1077,24 @@ const history = React.useMemo(() => {
                 )}
               </TemplateSection>
 
+                            <TemplateSection
+                secId="template-bmc"
+                title="Business Model Canvas"
+                icon={FaThLarge}
+              >
+                {(isEditing) => (
+                  <div className="space-y-2">
+                    <div className="sm:col-span-2">
+                      <BusinessModelCanvas
+                        formData={formData}
+                        setField={setField}
+                        isEditing={isEditing}
+                      />
+                    </div>
+                  </div>
+                )}
+              </TemplateSection>
+
 
               <TemplateSection secId="template-fiveforces" title="Five Forces Analysis" icon={FaProjectDiagram}>
                 {(isEditing) => (
@@ -997,6 +1128,23 @@ const history = React.useMemo(() => {
                   <div className="space-y-2">
                     <div className="sm:col-span-2">
                       <IndustryValueChainAnalysis
+                        formData={formData}
+                        setField={setField}
+                        isEditing={isEditing}
+                      />
+                    </div>
+                  </div>
+                )}
+              </TemplateSection>
+              <TemplateSection
+                secId="template-value-chain-gap"
+                title="Gap Analysis (Value Chain)"
+                icon={FaExclamationTriangle}
+              >
+                {(isEditing) => (
+                  <div className="space-y-2">
+                    <div className="sm:col-span-2">
+                      <IndustryValueChainGapAnalysis
                         formData={formData}
                         setField={setField}
                         isEditing={isEditing}
@@ -1050,7 +1198,19 @@ const history = React.useMemo(() => {
               </TemplateSection> */}
             </div>
             <div className="mt-10">
-              <div className="text-sm font-semibold text-neutral-800 mb-2">Custom Sections</div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm font-semibold text-neutral-800">Custom Sections</div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  className="text-[12px]"
+                  onClick={addNewSection}
+                >
+                  <FiPlus className="w-4 h-4" />
+                  Tambah Section
+                </Button>
+              </div>
               <div className="divide-y divide-neutral-100 space-y-8">
           {(Array.isArray(sections) ? sections : []).map((s) => {
             const isEditing = !!editing[s.id]
@@ -1148,10 +1308,10 @@ const history = React.useMemo(() => {
           Kelengkapan Profil
         </div>
         <div className="flex flex-col items-center justify-center py-2 gap-1.5">
-          {/* 🔒 Hardcode 6 dari 9 */}
-          <RadialProgress current={6} total={9} />
+          {/* 🔒 Hardcode 9 dari 12 */}
+          <RadialProgress current={9} total={12} />
           <div className="text-xs text-neutral-500">
-            6 dari 9 modul profil terisi
+            9 dari 12 modul profil terisi
           </div>
         </div>
       </Card>
@@ -1184,17 +1344,29 @@ const history = React.useMemo(() => {
       {/* Daftar Isi + penanda modul belum lengkap */}
       <Card className="p-4">
         {(() => {
-          const items = [
+          const baseItems = [
             { id: 'template-company', label: 'Company Demographics', icon: FaUsers },
             { id: 'template-org-structure', label: 'Organization Structure', icon: FaSitemap },
             { id: 'template-personnel', label: 'Key Personnel', icon: FiUser },
+            { id: 'template-end-customer', label: 'End-Customer Profile', icon: FaUsers },
             { id: 'template-products', label: 'Our Products & Services', icon: FaBoxOpen },
             { id: 'template-service', label: 'Our Service Performance', icon: FaChartBar },
             { id: 'template-competitor', label: 'Competitor Landscape', icon: FaBalanceScale },
-            { id: 'template-fiveforces', label: 'Five Forces', icon: FaProjectDiagram },
+            { id: 'template-bmc', label: 'Business Model Canvas', icon: FaThLarge },
+            { id: 'template-fiveforces', label: 'Five Forces Analysis', icon: FaProjectDiagram },
             { id: 'template-swot', label: 'SWOT Analysis', icon: FaLightbulb },
-            { id: 'template-artifacts', label: 'Artifacts', icon: FaNetworkWired },
+            { id: 'template-artifacts', label: 'Industry Value Chain Analysis', icon: FaNetworkWired },
+            { id: 'template-value-chain-gap', label: 'Gap Analysis (Value Chain)', icon: FaExclamationTriangle },
           ]
+          const customItems = Array.isArray(sections)
+            ? sections.map((s) => ({
+                id: s.id,
+                label: s.label,
+                icon: FiFileText,
+              }))
+            : []
+          const items = [...baseItems, ...customItems]
+
 
           const incompleteIds = [
             'template-competitor',

@@ -69,8 +69,8 @@ export default function Sidebar() {
             M
           </div>
           <div className="leading-tight">
-            <div className="text-white font-semibold">AMS</div>
-            <div className="text-white/50 text-[11px]">Account Management System</div>
+            <div className="text-white font-semibold">KAMS</div>
+            <div className="text-white/50 text-[11px]">Key Account Management System</div>
           </div>
         </div>
         <FaChevronDown className="text-white/50" />

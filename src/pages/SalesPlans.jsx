@@ -139,7 +139,6 @@ export default function SalesMySalesPlans() {
         variant="hero"
         title="Sales Plan Saya"
         subtitle="Lihat seluruh sales plan yang Anda miliki lintas pelanggan."
-        icon={FaListUl}
       />
 
       {/* Filter bar */}
