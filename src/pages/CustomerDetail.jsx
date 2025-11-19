@@ -48,7 +48,9 @@ export default function CustomerDetail() {
               color="blue"
             />
             <div className="p-4">
-              {tab === 'sales' && <SalesPlan customerId={details.nipnas || base.code || id} />}
+              {tab === 'sales' && (
+                <SalesPlan customerId={details.nipnas || base.code || id} customerName={base.name} />
+              )}
               {tab === 'visiting' && <CustomerVisitingSection customerId={id} customerName={base.name} />}
               {tab === 'relationship' && (
                 <RelationshipPlan customerId={details.nipnas || base.code || id} contacts={details.contacts || []} />

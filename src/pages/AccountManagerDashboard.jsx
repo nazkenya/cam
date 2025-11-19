@@ -58,10 +58,10 @@ const slugifyName = (name = '') =>
 
 // ---------- Mock data (replace with API later) ----------
 const MOCK_CUSTOMERS = [
-  { id: 'c1', name: 'PT Sinar Jaya', relationship: 'Promotor', freq: 14, lastContactDays: 2 },
-  { id: 'c2', name: 'PT Andalan Telekom', relationship: 'Netral',   freq: 7,  lastContactDays: 6 },
-  { id: 'c3', name: 'PT Nusantara Digital', relationship: 'Detractor', freq: 7, lastContactDays: 18 },
-  { id: 'c4', name: 'PT Mandiri Tech', relationship: 'Netral', freq: 30, lastContactDays: 9 },
+  { id: 'c1', name: 'Samsung Electronics Indonesia', relationship: 'Promotor', freq: 14, lastContactDays: 2 },
+  { id: 'c2', name: 'Tokopedia', relationship: 'Netral',   freq: 7,  lastContactDays: 6 },
+  { id: 'c3', name: 'Grab Indonesia', relationship: 'Detractor', freq: 7, lastContactDays: 18 },
+  { id: 'c4', name: 'Astra International', relationship: 'Netral', freq: 30, lastContactDays: 9 },
 ]
 
 // Upcoming activities (mixed)
@@ -76,7 +76,7 @@ const MOCK_ACTIVITIES = [
     topic: 'QBR Q4',
     description: 'Review KPI, renewal & upsell opportunities',
     withCustomer: true,
-    customer: 'PT Sinar Jaya',
+    customer: 'Samsung Electronics Indonesia',
     invitees: ['Account Manager', 'Customer Director'],
     status: 'upcoming',
   },
@@ -90,7 +90,7 @@ const MOCK_ACTIVITIES = [
     topic: 'SD-WAN POC',
     description: 'Technical hands-on & architecture deep dive',
     withCustomer: true,
-    customer: 'PT Nusantara Digital',
+    customer: 'Tokopedia',
     invitees: ['Presales', 'Network Team'],
     status: 'upcoming',
   },
@@ -112,18 +112,18 @@ const MOCK_ACTIVITIES = [
 
 // To-Dos now include plan & company
 const MOCK_TODOS = [
-  { id: 't1', title: 'Kirim proposal SD-WAN', due: '2025-11-20', done: false, planTitle: 'SP-Q4 Telco Modernization', company: 'PT Andalan Telekom' },
-  { id: 't2', title: 'Update contact PIC',     due: '2025-11-18', done: true,  planTitle: 'SP-Retention 2025',      company: 'PT Sinar Jaya' },
-  { id: 't3', title: 'Submit visit report QBR',due: '2025-11-21', done: false, planTitle: 'SP-QBR Q4',               company: 'PT Nusantara Digital' },
-  { id: 't4', title: 'Brief Manager soal SLA', due: '2025-11-22', done: false, planTitle: 'SP-Improve SLA',          company: 'PT Mandiri Tech' },
+  { id: 't1', title: 'Kirim proposal SD-WAN', due: '2025-11-20', done: false, planTitle: 'SP-Q4 Telco Modernization', company: 'Grab' },
+  { id: 't2', title: 'Update contact PIC',     due: '2025-11-18', done: true,  planTitle: 'SP-Retention 2025',      company: 'Samsung Electronics Indonesia' },
+  { id: 't3', title: 'Submit visit report QBR',due: '2025-11-21', done: false, planTitle: 'SP-QBR Q4',               company: 'Tokopedia' },
+  { id: 't4', title: 'Brief Manager soal SLA', due: '2025-11-22', done: false, planTitle: 'SP-Improve SLA',          company: 'Astra International' },
 ]
 
 // PIC contact-due (nama orang, bukan perusahaan)
 const MOCK_PIC_CONTACTS = [
-  { id: 'p1', name: 'Alia Smith',   company: 'PT Nusantara Digital', targetDays: 7,  lastContactDays: 18 },
-  { id: 'p2', name: 'Budi Hartono', company: 'PT Andalan Telekom',   targetDays: 7,  lastContactDays: 6  },
-  { id: 'p3', name: 'Catherine Lee',company: 'PT Sinar Jaya',        targetDays: 14, lastContactDays: 15 },
-  { id: 'p4', name: 'David Kim',    company: 'PT Mandiri Tech',      targetDays: 30, lastContactDays: 9  },
+  { id: 'p1', name: 'Alia Smith',   company: 'Tokopedia', targetDays: 7,  lastContactDays: 18 },
+  { id: 'p2', name: 'Budi Hartono', company: 'Grab',   targetDays: 7,  lastContactDays: 6  },
+  { id: 'p3', name: 'Catherine Lee',company: 'Samsung Electronics Indonesia',        targetDays: 14, lastContactDays: 15 },
+  { id: 'p4', name: 'David Kim',    company: 'Astra International',      targetDays: 30, lastContactDays: 9  },
 ]
 
 // ---------- Small helpers ----------

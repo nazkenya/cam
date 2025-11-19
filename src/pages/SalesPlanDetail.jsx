@@ -8,12 +8,18 @@ import Tag from '@components/ui/Tag'
 import { Badge } from '@components/ui/Badge'
 import YesNoToggle from '@components/ui/YesNoToggle'
 import { FiTrash2 } from 'react-icons/fi'
+import { useAuth } from '@auth/AuthContext'
+import { ROLES } from '@auth/roles'
 
 const INIT_STATUS = ['DIRENCANAKAN', 'SEDANG BERJALAN', 'BELUM MULAI', 'SELESAI']
 
 export default function SalesPlanDetail() {
   const { id: customerId, planId } = useParams()
   const navigate = useNavigate()
+  const { role } = useAuth()
+
+  const isSales = role === ROLES.sales
+  const isManager = role === ROLES.manager
 
   // --- Plan info (read-only from storage) ---
   const planStorageKey = React.useMemo(() => `salesPlan_${customerId}`, [customerId])
@@ -24,16 +30,22 @@ export default function SalesPlanDetail() {
     } catch {}
     return []
   })
+
   const plan = React.useMemo(
     () => plans.find((p) => p.id === planId) || { title: '-', dateStart: '', dateEnd: '' },
     [plans, planId]
   )
+
+  const isPlanApproved = plan.approvalStatus === 'Approved'
+  // ✅ hanya SALES + plan Approved yang boleh manage inisiatif & task
+  const canManageInitiatives = isSales && isPlanApproved
 
   // --- Initiatives persisted per-plan ---
   const initKey = React.useMemo(
     () => `salesPlan_${customerId}_${planId}_initiatives`,
     [customerId, planId]
   )
+
   const [inits, setInits] = React.useState(() => {
     try {
       const raw = localStorage.getItem(initKey)
@@ -41,6 +53,7 @@ export default function SalesPlanDetail() {
     } catch {}
     return []
   })
+
   const persistInits = React.useCallback(
     (next) => {
       setInits(next)
@@ -51,7 +64,7 @@ export default function SalesPlanDetail() {
     [initKey]
   )
 
-  // --- Create initiative modal (NO initial tasks anymore) ---
+  // --- Create initiative modal ---
   const [openInit, setOpenInit] = React.useState(false)
   const [initForm, setInitForm] = React.useState({
     action: '',
@@ -60,6 +73,7 @@ export default function SalesPlanDetail() {
     status: INIT_STATUS[0],
   })
   const [errors, setErrors] = React.useState({})
+
   const validateInit = React.useCallback(() => {
     const e = {}
     if (!initForm.action.trim()) e.action = true
@@ -69,6 +83,7 @@ export default function SalesPlanDetail() {
 
   const addInitiative = React.useCallback(() => {
     if (!validateInit()) return
+
     const newInit = {
       id: `init_${Date.now()}`,
       action: initForm.action,
@@ -81,8 +96,9 @@ export default function SalesPlanDetail() {
         .map((s) => s.trim())
         .filter(Boolean),
       status: initForm.status,
-      tasks: [], // always start empty
+      tasks: [],
     }
+
     persistInits([...inits, newInit])
     setOpenInit(false)
     setInitForm({ action: '', products: '', pics: '', status: INIT_STATUS[0] })
@@ -92,6 +108,7 @@ export default function SalesPlanDetail() {
   // --- Task toggle ---
   const toggleTask = React.useCallback(
     (initId, taskId, done) => {
+      if (!canManageInitiatives) return
       const next = inits.map((it) =>
         it.id === initId
           ? {
@@ -104,17 +121,21 @@ export default function SalesPlanDetail() {
       )
       persistInits(next)
     },
-    [inits, persistInits]
+    [inits, persistInits, canManageInitiatives]
   )
 
-  // --- Delete initiative (icon + confirm modal) ---
+  // --- Delete initiative ---
   const [confirmOpen, setConfirmOpen] = React.useState(false)
   const [deleteTargetId, setDeleteTargetId] = React.useState(null)
 
-  const askDeleteInit = React.useCallback((initId) => {
-    setDeleteTargetId(initId)
-    setConfirmOpen(true)
-  }, [])
+  const askDeleteInit = React.useCallback(
+    (initId) => {
+      if (!canManageInitiatives) return
+      setDeleteTargetId(initId)
+      setConfirmOpen(true)
+    },
+    [canManageInitiatives]
+  )
 
   const confirmDeleteInit = React.useCallback(() => {
     if (!deleteTargetId) return
@@ -128,15 +149,20 @@ export default function SalesPlanDetail() {
   const [activeInitId, setActiveInitId] = React.useState(null)
   const [taskForm, setTaskForm] = React.useState({ title: '', requiresCustomer: false })
 
-  const openTaskModal = React.useCallback((initId) => {
-    setActiveInitId(initId)
-    setTaskForm({ title: '', requiresCustomer: false })
-    setTaskModalOpen(true)
-  }, [])
+  const openTaskModal = React.useCallback(
+    (initId) => {
+      if (!canManageInitiatives) return
+      setActiveInitId(initId)
+      setTaskForm({ title: '', requiresCustomer: false })
+      setTaskModalOpen(true)
+    },
+    [canManageInitiatives]
+  )
 
   const addTaskToActive = React.useCallback(() => {
     const title = (taskForm.title || '').trim()
     if (!title || !activeInitId) return
+
     const next = inits.map((it) =>
       it.id === activeInitId
         ? {
@@ -153,6 +179,7 @@ export default function SalesPlanDetail() {
           }
         : it
     )
+
     persistInits(next)
     setTaskModalOpen(false)
     setActiveInitId(null)
@@ -166,19 +193,90 @@ export default function SalesPlanDetail() {
         <div>
           <h2 className="text-lg font-bold text-neutral-900">{plan.title}</h2>
           <div className="text-sm text-neutral-600">
-            Period: {plan.dateStart || '-'} to {plan.dateEnd || '-'}
+            Periode: {plan.dateStart || '-'} s.d. {plan.dateEnd || '-'}
           </div>
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
+            {/* Approval badge */}
+            <span
+              className={`px-2 py-0.5 rounded-full border ${
+                plan.approvalStatus === 'Approved'
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  : plan.approvalStatus === 'Rejected'
+                  ? 'bg-rose-50 text-rose-700 border-rose-200'
+                  : 'bg-amber-50 text-amber-700 border-amber-200'
+              }`}
+            >
+              {plan.approvalStatus || 'Pending'}
+            </span>
+
+            {/* Lampiran, kalau ada */}
+            {plan.fileName && (
+              <a
+                href={plan.fileData}
+                download={plan.fileName}
+                className="text-[#2C5CC5] hover:underline inline-flex items-center gap-1"
+              >
+                Unduh Lampiran ({plan.fileName})
+              </a>
+            )}
+          </div>
+
+          {/* Catatan Manager */}
+          {plan.managerComment && (
+            <p className="text-xs text-neutral-500 mt-1">
+              <span className="font-semibold">Catatan Manager:</span> {plan.managerComment}
+            </p>
+          )}
         </div>
+
         <div className="flex items-center gap-2">
           <Button
-            variant="secondary"
+            variant="back"
             onClick={() => navigate(`/customers/${customerId}#sales`)}
           >
-            Back to Plan List
+            Kembali ke Sales Plan
           </Button>
-          <Button onClick={() => setOpenInit(true)}>Tambah Inisiatif</Button>
+
+          {/* Tombol Tambah Inisiatif HANYA untuk SALES */}
+          {isSales && (
+            <Button
+              onClick={() => {
+                if (canManageInitiatives) setOpenInit(true)
+              }}
+              disabled={!canManageInitiatives}
+            >
+              Tambah Inisiatif
+            </Button>
+          )}
         </div>
       </div>
+
+      {/* Info peran */}
+      {!canManageInitiatives && (
+        <Card className="border border-neutral-200 bg-neutral-50 text-sm text-neutral-700">
+          {isManager && (
+            <p>
+              Anda masuk sebagai <span className="font-semibold">Manager</span>.
+              Halaman ini hanya dapat dilihat (read-only). Penambahan dan perubahan
+              inisiatif dilakukan oleh <span className="font-semibold">Sales</span>
+              setelah sales plan disetujui.
+            </p>
+          )}
+          {isSales && !isPlanApproved && (
+            <p>
+              Sales plan ini masih berstatus{' '}
+              <span className="font-semibold">
+                {plan.approvalStatus || 'Pending'}
+              </span>
+              . Inisiatif baru dapat dibuat setelah sales plan{' '}
+              <span className="font-semibold">Approved</span> oleh Manager.
+            </p>
+          )}
+          {!isSales && !isManager && (
+            <p>Role Anda tidak memiliki akses untuk mengubah inisiatif pada sales plan ini.</p>
+          )}
+        </Card>
+      )}
 
       {/* Initiatives table */}
       <Card className="p-0 overflow-hidden ring-1 ring-neutral-200">
@@ -197,30 +295,38 @@ export default function SalesPlanDetail() {
             <tbody className="divide-y divide-neutral-100">
               {inits.length === 0 && (
                 <tr>
-                  <td
-                    colSpan={6}
-                    className="px-4 py-6 text-sm text-neutral-500"
-                  >
-                    Belum ada inisiatif. Klik{' '}
-                    <span className="font-medium">Tambah Inisiatif</span>.
+                  <td colSpan={6} className="px-4 py-6 text-sm text-neutral-500">
+                    Belum ada inisiatif untuk sales plan ini.
+                    {canManageInitiatives && (
+                      <>
+                        {' '}
+                        Klik <span className="font-medium">Tambah Inisiatif</span> untuk mulai
+                        menyusun action plan.
+                      </>
+                    )}
                   </td>
                 </tr>
               )}
+
               {inits.map((it) => {
                 const total = (it.tasks || []).length
                 const done = (it.tasks || []).filter((t) => t.done).length
+
                 return (
                   <tr key={it.id} className="align-top">
+                    {/* Action */}
                     <td className="px-4 py-4 text-sm text-neutral-900">
                       {it.action}
                     </td>
 
+                    {/* Produk */}
                     <td className="px-4 py-4 space-y-1">
                       {(it.products || []).map((p, i) => (
                         <Tag key={`${p}-${i}`}>{p}</Tag>
                       ))}
                     </td>
 
+                    {/* PIC */}
                     <td className="px-4 py-4 space-y-1">
                       {(it.pics || []).map((p, i) => (
                         <span
@@ -232,6 +338,7 @@ export default function SalesPlanDetail() {
                       ))}
                     </td>
 
+                    {/* Status Inisiatif */}
                     <td className="px-4 py-4">
                       <span
                         className={
@@ -249,6 +356,7 @@ export default function SalesPlanDetail() {
                       </span>
                     </td>
 
+                    {/* Task List */}
                     <td className="px-4 py-4">
                       <div className="space-y-2">
                         {(it.tasks || []).map((t) => (
@@ -257,7 +365,9 @@ export default function SalesPlanDetail() {
                               type="checkbox"
                               className="w-4 h-4 accent-blue-600"
                               checked={!!t.done}
+                              disabled={!canManageInitiatives}
                               onChange={(e) =>
+                                canManageInitiatives &&
                                 toggleTask(it.id, t.id, e.target.checked)
                               }
                             />
@@ -282,29 +392,35 @@ export default function SalesPlanDetail() {
                           <div className="text-[12px] font-medium text-neutral-500">
                             {done}/{total} completed
                           </div>
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={() => openTaskModal(it.id)}
-                            className="px-2.5 py-1 text-[12px]"
-                          >
-                            Tambah Task
-                          </Button>
+
+                          {canManageInitiatives && (
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => openTaskModal(it.id)}
+                              className="px-2.5 py-1 text-[12px]"
+                            >
+                              Tambah Task
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </td>
 
+                    {/* Aksi */}
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => askDeleteInit(it.id)}
-                          className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 focus:outline-none focus:ring-2 focus:ring-rose-300"
-                          title="Hapus inisiatif"
-                          aria-label="Hapus inisiatif"
-                        >
-                          <FiTrash2 className="w-4 h-4" />
-                        </button>
+                        {canManageInitiatives && (
+                          <button
+                            type="button"
+                            onClick={() => askDeleteInit(it.id)}
+                            className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 focus:outline-none focus:ring-2 focus:ring-rose-300"
+                            title="Hapus inisiatif"
+                            aria-label="Hapus inisiatif"
+                          >
+                            <FiTrash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -315,7 +431,7 @@ export default function SalesPlanDetail() {
         </div>
       </Card>
 
-      {/* Modal: Tambah Inisiatif (no initial tasks) */}
+      {/* Modal: Tambah Inisiatif */}
       <Modal
         open={openInit}
         onClose={() => {
@@ -342,8 +458,7 @@ export default function SalesPlanDetail() {
         <div className="space-y-3">
           <div>
             <div className="text-[11px] font-semibold text-neutral-600 uppercase mb-1">
-              Inisiatif / Action Item
-              <span className="text-rose-500">*</span>
+              Inisiatif / Action Item<span className="text-rose-500">*</span>
             </div>
             <FormInput
               type="textarea"

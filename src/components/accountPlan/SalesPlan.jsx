@@ -5,7 +5,8 @@ import Button from '@components/ui/Button'
 import Modal from '@components/ui/Modal'
 import FormInput from '@components/ui/FormInput'
 import SearchInput from '@components/ui/SearchInput'
-import { FiTrash2, FiPlus } from 'react-icons/fi'
+import { FiTrash2, FiPlus, FiPaperclip } from 'react-icons/fi'
+import { useAuth } from '@auth/AuthContext'
 
 const STATUSES = ['Draft', 'Active', 'Closed']
 
@@ -16,8 +17,9 @@ const statusClass = (s) =>
     ? 'bg-blue-50 text-blue-700 border-blue-200'
     : 'bg-neutral-100 text-neutral-700 border-neutral-200'
 
-export default function SalesPlan({ customerId = 'demo' }) {
+export default function SalesPlan({ customerId = 'demo', customerName = '' }) {
   const navigate = useNavigate()
+  const { user, role } = useAuth()
   const storageKey = React.useMemo(() => `salesPlan_${customerId}`, [customerId])
 
   const [plans, setPlans] = React.useState(() => {
@@ -36,6 +38,8 @@ export default function SalesPlan({ customerId = 'demo' }) {
     dateEnd: '',
     status: 'Draft',
     description: '',
+    fileName: '',
+    fileData: '',
   })
   const [errors, setErrors] = React.useState({})
 
@@ -48,7 +52,15 @@ export default function SalesPlan({ customerId = 'demo' }) {
   const [statusFilter, setStatusFilter] = React.useState('ALL')
 
   const resetForm = React.useCallback(() => {
-    setForm({ title: '', dateStart: '', dateEnd: '', status: 'Draft', description: '' })
+    setForm({
+      title: '',
+      dateStart: '',
+      dateEnd: '',
+      status: 'Draft',
+      description: '',
+      fileName: '',
+      fileData: '',
+    })
     setErrors({})
   }, [])
 
@@ -67,14 +79,38 @@ export default function SalesPlan({ customerId = 'demo' }) {
     try { localStorage.setItem(storageKey, JSON.stringify(next)) } catch {}
   }, [storageKey])
 
+  const handleFileChange = React.useCallback((event) => {
+    const file = event.target.files?.[0]
+    if (!file) {
+      setForm((prev) => ({ ...prev, fileName: '', fileData: '' }))
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => {
+      setForm((prev) => ({ ...prev, fileName: file.name, fileData: reader.result }))
+    }
+    reader.readAsDataURL(file)
+  }, [])
+
   const onCreate = React.useCallback(() => {
     if (!validate()) return
-    const newPlan = { id: `sp_${Date.now()}`, ...form }
+    const newPlan = {
+      id: `sp_${Date.now()}`,
+      ...form,
+      customerId,
+      customerName,
+      ownerName: user?.name || 'Sales',
+      ownerId: user?.id,
+      ownerRole: role,
+      approvalStatus: 'Pending',
+      managerComment: '',
+      managerDecisionDate: null,
+    }
     const next = [newPlan, ...plans]
     savePlans(next)
     setOpen(false)
     resetForm()
-  }, [form, plans, savePlans, validate, resetForm])
+  }, [form, plans, savePlans, validate, resetForm, customerId, customerName, user?.name, user?.id, role])
 
   const askDelete = React.useCallback((plan) => {
     setDeleteTarget(plan)
@@ -167,6 +203,9 @@ export default function SalesPlan({ customerId = 'demo' }) {
                   <p className="mt-0.5 text-xs text-neutral-500">
                     {p.dateStart || '-'} <span className="mx-1">→</span> {p.dateEnd || '-'}
                   </p>
+                  {p.ownerName && (
+                    <p className="text-[11px] text-neutral-500 mt-0.5">Oleh {p.ownerName}</p>
+                  )}
                 </div>
                 <span
                   className={
@@ -177,6 +216,30 @@ export default function SalesPlan({ customerId = 'demo' }) {
                   {p.status}
                 </span>
               </header>
+
+              <div className="flex items-center gap-3 mt-3 text-[11px]">
+                <span
+                  className={`px-2 py-0.5 rounded-full border ${
+                    p.approvalStatus === 'Approved'
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : p.approvalStatus === 'Rejected'
+                      ? 'bg-rose-50 text-rose-700 border-rose-200'
+                      : 'bg-amber-50 text-amber-700 border-amber-200'
+                  }`}
+                >
+                  {p.approvalStatus || 'Pending'}
+                </span>
+                {p.fileName && (
+                  <a
+                    href={p.fileData}
+                    download={p.fileName}
+                    onClick={(e) => e.stopPropagation()}
+                    className="inline-flex items-center gap-1 text-[#2C5CC5] hover:underline"
+                  >
+                    <FiPaperclip /> {p.fileName}
+                  </a>
+                )}
+              </div>
 
               {p.description && (
                 <p className="mt-2 text-sm text-neutral-700 line-clamp-2">
@@ -284,6 +347,18 @@ export default function SalesPlan({ customerId = 'demo' }) {
               onChange={(v) => setForm((f) => ({ ...f, description: v }))}
               placeholder="Ringkasan plan, objective, scope, dll."
             />
+          </div>
+
+          <div>
+            <div className="text-[11px] font-semibold text-neutral-600 uppercase mb-1">Lampiran Sales Plan</div>
+            <input
+              type="file"
+              onChange={handleFileChange}
+              className="w-full text-sm text-neutral-600 border border-dashed border-neutral-300 rounded-xl px-3 py-2"
+            />
+            {form.fileName && (
+              <p className="text-xs text-neutral-500 mt-1">File terpilih: {form.fileName}</p>
+            )}
           </div>
         </div>
       </Modal>

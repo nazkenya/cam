@@ -24,6 +24,9 @@ import FiveForcesAnalysis from '../components/analysis/FiveForcesAnalysis'
 // NEW: Import the SwotAnalysis component
 import SwotAnalysis from '../components/analysis/SwotAnalysis'
 import IndustryValueChainAnalysis from '../components/analysis/IndustryValueChainAnalysis'
+import Modal from '../components/ui/Modal'
+import { FiEdit3 } from 'react-icons/fi'
+
 
 
 export default function AccountProfile() {
@@ -594,6 +597,52 @@ const onCompetitorsStrategyAdd = React.useCallback(() =>
     businessStrategy: '',
   }), [addRow])
 
+  const [historyOpen, setHistoryOpen] = React.useState(false)
+
+const history = React.useMemo(() => {
+  const key = `accountProfile_${id}_history`
+  try {
+    const raw = localStorage.getItem(key)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed
+    }
+  } catch {}
+
+  // Dummy fallback
+  return [
+    {
+      id: 'h1',
+      timestamp: '2025-11-15T09:32:00.000Z',
+      userName: 'Admin Satu',
+      userRole: 'Account Manager',
+      changes: [
+        {
+          field: 'Alamat kantor pusat',
+          from: 'Jl. Lama No. 1',
+          to: 'Jl. Baru No. 123',
+        },
+        {
+          field: 'Website',
+          from: 'example.com',
+          to: 'company.co.id',
+        },
+      ],
+    },
+    {
+      id: 'h2',
+      timestamp: '2025-11-10T11:55:00.000Z',
+      userName: 'Admin Dua',
+      userRole: 'Data Steward',
+      changes: [
+        { field: 'Industri', from: 'Lainnya', to: 'Teknologi' },
+        { field: 'Sub industri', from: '-', to: 'Elektronik Konsumen' },
+      ],
+    },
+  ]
+}, [id])
+
+
   return (
     <div ref={containerRef} className="animate-fade-in">
       {/* Page header */}
@@ -604,7 +653,14 @@ const onCompetitorsStrategyAdd = React.useCallback(() =>
         right={(
           <Toolbar>
             <Button type="button" variant="secondary"><FiPrinter className="w-4 h-4" /> Export PDF</Button>
-            <Button type="button" variant="secondary"><FiRotateCcw className="w-4 h-4" /> Riwayat</Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setHistoryOpen(true)}
+            >
+              <FiRotateCcw className="w-4 h-4" />
+              Lihat Riwayat
+            </Button>
             <Button type="button" variant="secondary" onClick={() => navigate(`/customers/${id}`)}><FiArrowLeft className="w-4 h-4" /> Back</Button>
           </Toolbar>
         )}
@@ -651,16 +707,16 @@ const onCompetitorsStrategyAdd = React.useCallback(() =>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <label htmlFor="companyName" className="text-sm text-neutral-700 font-medium">Company Name</label>
+                          <label htmlFor="companyName" className="text-sm text-neutral-700 font-medium">Nama Perusahaan</label>
                           <ViewOrEdit
                             editing={isEditing}
                             view={<div className="mt-1 text-sm text-neutral-900">{formData.companyName || '—'}</div>}
                           >
-                            <DebouncedTextInput id="companyName" value={formData.companyName} onChange={v => setField('companyName', v)} placeholder="e.g., PT Nusantara Teknologi" />
+                            <DebouncedTextInput id="companyName" value={formData.companyName} onChange={v => setField('companyName', v)} placeholder="e.g., Tokopedia" />
                           </ViewOrEdit>
                         </div>
                         <div>
-                          <label htmlFor="nipnas" className="text-sm text-neutral-700 font-medium">NIPNAS</label>
+                          <label htmlFor="nipnas" className="text-sm text-neutral-700 font-medium">Nomor Pelanggan</label>
                           <ViewOrEdit
                             editing={isEditing}
                             view={<div className="mt-1 text-sm">{formData.nipnas || '—'}</div>}
@@ -671,22 +727,22 @@ const onCompetitorsStrategyAdd = React.useCallback(() =>
                       </div>
                     </div>
                     <Group title="Basic">
-                      <Field idFor="segment" label="Segment"><ViewOrEdit editing={isEditing} view={<div className="text-sm">{formData.segment || '—'}</div>}><DebouncedTextInput id="segment" value={formData.segment} onChange={v => setField('segment', v)} placeholder="e.g., Enterprise" /></ViewOrEdit></Field>
-                      <Field idFor="subsegment" label="Subsegment"><ViewOrEdit editing={isEditing} view={<div className="text-sm">{formData.subsegment || '—'}</div>}><DebouncedTextInput id="subsegment" value={formData.subsegment} onChange={v => setField('subsegment', v)} placeholder="e.g., Retail" /></ViewOrEdit></Field>
-                      <Field idFor="witel" label="Witel"><ViewOrEdit editing={isEditing} view={<div className="text-sm">{formData.witel || '—'}</div>}><DebouncedTextInput id="witel" value={formData.witel} onChange={v => setField('witel', v)} placeholder="e.g., Witel Jakarta" /></ViewOrEdit></Field>
+                      <Field idFor="segment" label="Industri"><ViewOrEdit editing={isEditing} view={<div className="text-sm">{formData.segment || '—'}</div>}><DebouncedTextInput id="segment" value={formData.segment} onChange={v => setField('segment', v)} placeholder="e.g., Enterprise" /></ViewOrEdit></Field>
+                      <Field idFor="subsegment" label="Subindustri"><ViewOrEdit editing={isEditing} view={<div className="text-sm">{formData.subsegment || '—'}</div>}><DebouncedTextInput id="subsegment" value={formData.subsegment} onChange={v => setField('subsegment', v)} placeholder="e.g., Retail" /></ViewOrEdit></Field>
+                      <Field idFor="witel" label="Wilayah"><ViewOrEdit editing={isEditing} view={<div className="text-sm">{formData.witel || '—'}</div>}><DebouncedTextInput id="witel" value={formData.witel} onChange={v => setField('witel', v)} placeholder="e.g., Witel Jakarta" /></ViewOrEdit></Field>
                     </Group>
                     <Group title="Contact">
-                      <Field idFor="telephone" label="Telephone"><ViewOrEdit editing={isEditing} view={<div className="text-sm">{formData.telephone || '—'}</div>}><DebouncedTextInput id="telephone" value={formData.telephone} onChange={v => setField('telephone', v)} placeholder="e.g., +62 21 555 123" /></ViewOrEdit></Field>
+                      <Field idFor="telephone" label="Telepon"><ViewOrEdit editing={isEditing} view={<div className="text-sm">{formData.telephone || '—'}</div>}><DebouncedTextInput id="telephone" value={formData.telephone} onChange={v => setField('telephone', v)} placeholder="e.g., +62 21 555 123" /></ViewOrEdit></Field>
                       <Field idFor="website" label="Website"><ViewOrEdit editing={isEditing} view={formData.website ? (
                         <a href={formData.website} target="_blank" rel="noreferrer" className="text-[#2C5CC5] hover:underline break-all whitespace-normal leading-5">{formData.website}</a>
                       ) : (
                         <span className="text-neutral-500">—</span>
                       )}><DebouncedTextInput id="website" type="url" value={formData.website} onChange={v => setField('website', v)} placeholder="https://example.co.id" /></ViewOrEdit></Field>
                       <Field idFor="email" label="Email"><ViewOrEdit editing={isEditing} view={<div className="text-sm">{formData.email || '—'}</div>}><DebouncedTextInput id="email" type="email" value={formData.email} onChange={v => setField('email', v)} placeholder="info@example.co.id" /></ViewOrEdit></Field>
-                      <Field idFor="address" label="Address" className="sm:col-span-2"><ViewOrEdit editing={isEditing} view={<span className="leading-5 whitespace-pre-wrap break-words">{formData.address || '—'}</span>}><DebouncedTextArea id="address" value={formData.address} onChange={v => setField('address', v)} rows={2} placeholder="Street, City, Province, Postal Code" /></ViewOrEdit></Field>
+                      <Field idFor="address" label="Alamat" className="sm:col-span-2"><ViewOrEdit editing={isEditing} view={<span className="leading-5 whitespace-pre-wrap break-words">{formData.address || '—'}</span>}><DebouncedTextArea id="address" value={formData.address} onChange={v => setField('address', v)} rows={2} placeholder="Street, City, Province, Postal Code" /></ViewOrEdit></Field>
                     </Group>
                     <Group title="Meta">
-                      <Field idFor="priorityLevel" label="Priority Level"><ViewOrEdit editing={isEditing} view={<div className="text-sm">{formData.priorityLevel || '—'}</div>}>
+                      <Field idFor="priorityLevel" label="Level Prioritas"><ViewOrEdit editing={isEditing} view={<div className="text-sm">{formData.priorityLevel || '—'}</div>}>
                         <Select value={formData.priorityLevel} onChange={e => setField('priorityLevel', e.target.value)} id="priorityLevel">
                           <option value="">Select…</option>
                           <option value="Top 20">Top 20</option>
@@ -795,7 +851,7 @@ const onCompetitorsStrategyAdd = React.useCallback(() =>
                   </div>
                 )}
               </TemplateSection>
-              <TemplateSection secId="template-products" title="Telkom Products & Services" icon={FaBoxOpen}>
+              <TemplateSection secId="template-products" title="Our Products & Services" icon={FaBoxOpen}>
                 {(isEditing) => (
                   <div className="space-y-6">
                     <div className="space-y-2">
@@ -844,7 +900,7 @@ const onCompetitorsStrategyAdd = React.useCallback(() =>
                 )}
               </TemplateSection>
 
-              <TemplateSection secId="template-service" title="Telkom Service Performance" icon={FaChartBar}>
+              <TemplateSection secId="template-service" title="Our Service Performance" icon={FaChartBar}>
                 {(isEditing) => (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -1085,137 +1141,228 @@ const onCompetitorsStrategyAdd = React.useCallback(() =>
         </div>
 
         {/* Right sidebar */}
-  <aside className="lg:sticky lg:top-[84px] h-max space-y-4 hidden lg:block">
-          <Card className="p-4">
-            <div className="text-sm font-semibold text-neutral-800 mb-3">Kelengkapan Profil</div>
-            <div className="flex items-center justify-center py-2">
-              {(() => { const secArr = Array.isArray(sections) ? sections : []; return (
-                <RadialProgress current={secArr.filter(s => !isBlankHtml(s.html)).length} total={secArr.length} />
-              )})()}
+    <aside className="lg:sticky lg:top-[84px] h-max space-y-4 hidden lg:block">
+      {/* Kelengkapan Profil */}
+      <Card className="p-4">
+        <div className="text-sm font-semibold text-neutral-800 mb-3">
+          Kelengkapan Profil
+        </div>
+        <div className="flex flex-col items-center justify-center py-2 gap-1.5">
+          {/* 🔒 Hardcode 6 dari 9 */}
+          <RadialProgress current={6} total={9} />
+          <div className="text-xs text-neutral-500">
+            6 dari 9 modul profil terisi
+          </div>
+        </div>
+      </Card>
+
+      {/* Info Halaman */}
+      <Card className="p-4">
+        <div className="text-sm font-semibold text-neutral-800 mb-3">
+          Info Halaman
+        </div>
+        <div className="space-y-2 text-sm">
+          <div className="flex items-center justify-between">
+            <div className="inline-flex items-center gap-2 text-neutral-600">
+              <FiClock /> Terakhir Diedit
             </div>
-          </Card>
-          <Card className="p-4">
-            <div className="text-sm font-semibold text-neutral-800 mb-3">Info Halaman</div>
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center justify-between">
-                <div className="inline-flex items-center gap-2 text-neutral-600"><FiClock /> Terakhir Diedit</div>
-                <div className="text-neutral-900">{lastEdited ? lastEdited.toLocaleString() : '-'}</div>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="inline-flex items-center gap-2 text-neutral-600"><FiUser /> Oleh</div>
-                <div className="text-neutral-900"><Badge variant="neutral">Admin</Badge></div>
-              </div>
+            <div className="text-neutral-900">
+              {lastEdited ? lastEdited.toLocaleString() : '-'}
             </div>
-          </Card>
-          <Card className="p-4">
-            {(() => {
-                const items = [
-                { id: 'template-company', label: 'Company Demographics', icon: FaUsers },
-                { id: 'template-org-structure', label: 'Organization Structure', icon: FaSitemap },
-                { id: 'template-personnel', label: 'Key Personnel', icon: FiUser },
-                { id: 'template-products', label: 'Telkom Products & Services', icon: FaBoxOpen },
-                { id: 'template-service', label: 'Telkom Service Performance', icon: FaChartBar },
-                { id: 'template-competitor', label: 'Competitor Landscape', icon: FaBalanceScale },
-                { id: 'template-fiveforces', label: 'Five Forces', icon: FaProjectDiagram },
-                { id: 'template-swot', label: 'SWOT Analysis', icon: FaLightbulb },
-                { id: 'template-artifacts', label: 'Artifacts', icon: FaNetworkWired },
-              ]
-              const ids = items.map(i => i.id)
-              const allOpen = ids.every((id) => !collapsed[id])
-              const toggleAll = () => (allOpen ? collapseAll(ids) : expandAll(ids))
-              const label = allOpen ? 'Collapse All' : 'Expand All'
-              return (
-                <>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="inline-flex items-center gap-2 text-sm font-semibold text-neutral-800">Daftar Isi</div>
-                    <div className="flex items-center gap-2">
-                      <Button type="button" variant="secondary" size="sm" onClick={addNewSection}><FiPlus className="w-4 h-4" /> New</Button>
-                      <Button type="button" variant="secondary" size="sm" onClick={toggleAll}>{label}</Button>
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="inline-flex items-center gap-2 text-neutral-600">
+              <FiUser /> Oleh
+            </div>
+            <div className="text-neutral-900">
+              <Badge variant="neutral">Admin</Badge>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Daftar Isi + penanda modul belum lengkap */}
+      <Card className="p-4">
+        {(() => {
+          const items = [
+            { id: 'template-company', label: 'Company Demographics', icon: FaUsers },
+            { id: 'template-org-structure', label: 'Organization Structure', icon: FaSitemap },
+            { id: 'template-personnel', label: 'Key Personnel', icon: FiUser },
+            { id: 'template-products', label: 'Our Products & Services', icon: FaBoxOpen },
+            { id: 'template-service', label: 'Our Service Performance', icon: FaChartBar },
+            { id: 'template-competitor', label: 'Competitor Landscape', icon: FaBalanceScale },
+            { id: 'template-fiveforces', label: 'Five Forces', icon: FaProjectDiagram },
+            { id: 'template-swot', label: 'SWOT Analysis', icon: FaLightbulb },
+            { id: 'template-artifacts', label: 'Artifacts', icon: FaNetworkWired },
+          ]
+
+          const incompleteIds = [
+            'template-competitor',
+            'template-fiveforces',
+            'template-swot',
+          ]
+
+          const ids = items.map(i => i.id)
+          const allOpen = ids.every(id => !collapsed[id])
+          const toggleAll = () => (allOpen ? collapseAll(ids) : expandAll(ids))
+
+          return (
+            <>
+              {/* Header */}
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-[13px] font-semibold text-neutral-800">Daftar Isi</div>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className="text-[11px] px-2 py-1"
+                  onClick={toggleAll}
+                >
+                  {allOpen ? 'Collapse All' : 'Expand All'}
+                </Button>
+              </div>
+
+              {/* List */}
+            <ul className="space-y-1.5">
+              {items.map(({ id: secId, label, icon }) => {
+                const isCollapsed = !!collapsed[secId]
+                const summary = getTemplateSummary(secId)
+                const isIncomplete = incompleteIds.includes(secId)
+
+                return (
+                  <li key={secId}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const was = collapsed[secId]
+                        setCollapsed(prev => ({ ...prev, [secId]: !prev[secId] }))
+                        if (was) {
+                          setTimeout(() => {
+                            document.getElementById(secId)
+                              ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                          }, 40)
+                        }
+                      }}
+                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-neutral-50 text-left"
+                    >
+                      {/* Icon */}
+                      <span className="inline-grid place-items-center w-7 h-7 rounded-lg bg-[#F0F6FF] text-[#2C5CC5] shrink-0">
+                        {React.createElement(icon, { className: 'w-3.5 h-3.5' })}
+                      </span>
+
+                      {/* Label */}
+                      <div className="min-w-0 text-[13px] font-medium text-neutral-800 truncate">
+                        {label}
+                        {summary && (
+                          <span className="text-neutral-500 font-normal"> • {summary}</span>
+                        )}
+                      </div>
+
+                      {/* Badge “Belum” — RIGHT aligned */}
+                      {isIncomplete && (
+                        <span className="ml-auto mr-1 px-1.5 py-0.5 rounded-full text-[10px] bg-amber-50 text-amber-700 border border-amber-100">
+                          Belum
+                        </span>
+                      )}
+
+                      {/* Arrow */}
+                      <span className="text-neutral-400 text-[12px]">
+                        {isCollapsed ? '▾' : '▴'}
+                      </span>
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+
+            </>
+          )
+        })()}
+      </Card>
+
+    </aside>
+
+      </div>
+      <Modal
+  open={historyOpen}
+  onClose={() => setHistoryOpen(false)}
+  title="Riwayat Perubahan Account Profile"
+  panelClassName="max-w-xl"
+  footer={
+    <div className="flex justify-end">
+      <Button variant="back" onClick={() => setHistoryOpen(false)}>
+        Tutup
+      </Button>
+    </div>
+  }
+>
+  {history.length === 0 ? (
+    <div className="text-sm text-neutral-500">
+      Belum ada riwayat perubahan untuk halaman ini.
+    </div>
+  ) : (
+    <ul className="space-y-3">
+      {history
+        .slice()
+        .sort(
+          (a, b) =>
+            new Date(b.timestamp).getTime() -
+            new Date(a.timestamp).getTime()
+        )
+        .map((item) => {
+          const ts = item.timestamp
+            ? new Date(item.timestamp).toLocaleString('id-ID')
+            : '-'
+
+          return (
+            <li
+              key={item.id}
+              className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2.5"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-2 text-xs text-neutral-600">
+                  <FiUser className="w-3.5 h-3.5" />
+                  <span className="font-medium text-neutral-800">
+                    {item.userName}
+                  </span>
+                  {item.userRole && (
+                    <span className="text-neutral-400">• {item.userRole}</span>
+                  )}
+                </div>
+
+                <div className="inline-flex items-center gap-1 text-[11px] text-neutral-500">
+                  <FiClock className="w-3.5 h-3.5" />
+                  <span>{ts}</span>
+                </div>
+              </div>
+
+              {/* Detail perubahan */}
+              <div className="mt-2 space-y-1.5">
+                {(item.changes || []).map((chg, idx) => (
+                  <div
+                    key={`${item.id}-${idx}`}
+                    className="text-xs text-neutral-700 flex items-start gap-1.5"
+                  >
+                    <FiEdit3 className="w-3 h-3 mt-0.5 text-neutral-400" />
+                    <div>
+                      <span className="font-semibold">{chg.field}</span>
+                      <span className="mx-1 text-neutral-400">:</span>
+                      <span className="line-through text-neutral-400">
+                        {chg.from ?? '-'}
+                      </span>
+                      <span className="mx-1 text-neutral-400">→</span>
+                      <span className="text-neutral-900">{chg.to ?? '-'}</span>
                     </div>
                   </div>
-                  <ul className="space-y-2">
-                    {items.map(({ id: secId, label, icon }) => {
-                      const isCollapsed = !!collapsed[secId]
-                      const summary = getTemplateSummary(secId)
-                      const onClickItem = () => {
-                        const wasCollapsed = !!collapsed[secId]
-                        setCollapsed(prev => ({ ...prev, [secId]: !prev[secId] }))
-                        if (wasCollapsed) {
-                          setTimeout(() => {
-                            const el = document.getElementById(secId)
-                            el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                          }, 50)
-                        }
-                      }
-                      return (
-                        <li key={secId} className="">
-                          <button
-                            type="button"
-                            onClick={onClickItem}
-                            className="w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-neutral-50 text-left"
-                            aria-expanded={!isCollapsed}
-                            aria-controls={secId}
-                          >
-                            <span className="inline-grid place-items-center w-8 h-8 rounded-lg bg-[#F0F6FF] text-[#2C5CC5]">{React.createElement(icon, { className: 'w-4 h-4' })}</span>
-                            <div className="min-w-0 text-sm font-semibold text-neutral-800 truncate">
-                              {label}
-                              {summary ? (
-                                <span className="text-neutral-500 font-normal"> {' \u2022 '} {summary}</span>
-                              ) : null}
-                            </div>
-                            <span className="ml-auto text-neutral-400">
-                              {isCollapsed ? '▾' : '▴'}
-                            </span>
-                          </button>
-                        </li>
-                      )
-                    })}
-                    {(Array.isArray(sections) && sections.length > 0) && (
-                      <li className="pt-2 border-t border-neutral-100" aria-hidden />
-                    )}
-                    {(Array.isArray(sections) ? sections : []).map((s) => {
-                      const isCollapsedC = !!collapsed[s.id]
-                      const empty = isBlankHtml(s.html)
-                      const onClickCustom = () => {
-                        const wasCollapsed = !!collapsed[s.id]
-                        setCollapsed(prev => ({ ...prev, [s.id]: !prev[s.id] }))
-                        if (wasCollapsed) {
-                          setTimeout(() => {
-                            const el = document.getElementById(s.id)
-                            el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                          }, 50)
-                        }
-                      }
-                      return (
-                        <li key={s.id} className="">
-                          <button
-                            type="button"
-                            onClick={onClickCustom}
-                            className="w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-neutral-50 text-left"
-                            aria-expanded={!isCollapsedC}
-                            aria-controls={s.id}
-                          >
-                            <span className="inline-grid place-items-center w-8 h-8 rounded-lg bg-[#F0F6FF] text-[#2C5CC5]"><FiFileText className="w-4 h-4" /></span>
-                            <div className="min-w-0 text-sm font-semibold text-neutral-800 truncate">
-                              {s.label || 'Untitled Section'}
-                              {empty ? (
-                                <span className="text-neutral-400 font-normal"> {' \u2022 '} Empty</span>
-                              ) : null}
-                            </div>
-                            <span className="ml-auto text-neutral-400">
-                              {isCollapsedC ? '▾' : '▴'}
-                            </span>
-                          </button>
-                        </li>
-                      )
-                    })}
-                  </ul>
-                </>
-              )
-            })()}
-          </Card>
-        </aside>
-      </div>
+                ))}
+              </div>
+            </li>
+          )
+        })}
+    </ul>
+  )}
+</Modal>
+
     </div>
   )
 }

@@ -16,7 +16,8 @@ import {
   FaCog,
   FaSignOutAlt,
   FaFirefoxBrowser,
-  FaAddressBook
+  FaAddressBook,
+  FaCalendarAlt
 } from 'react-icons/fa'
 import { useAuth } from '../../auth/AuthContext'
 import { ROLES } from '../../auth/roles'
@@ -25,40 +26,22 @@ import { ROLES } from '../../auth/roles'
 const MENU = {
   base: [{ to: '/', label: 'Beranda', icon: FaHome }],
   [ROLES.admin]: [
-    { to: '/customers', label: 'Pelanggan', icon: FaUsers },
-    { to: '/sales-funnel', label: 'Sales Funnel', icon: FaBullhorn },
-    { to: '/produk', label: 'Produk & Solusi', icon: FaBoxOpen },
-    { to: '/dokumen', label: 'Dokumen', icon: FaFileAlt },
-    { to: '/monitoring', label: 'Monitoring Proses', icon: FaDesktop },
-    { to: '/partnership', label: 'Partnership', icon: FaHandshake },
-    { to: '/aktivitas', label: 'Aktivitas', icon: FaChartLine },
-    { to: '/ecrm-workspace', label: 'ECRM Workspace', icon: FaChartLine },
     { to: '/executive', label: 'Executive Dashboard', icon: FaChartLine },
   ],
   [ROLES.sales]: [
-    { to: '/customers', label: 'Pelanggan', icon: FaUsers },
-    { to: '/contacts', label: 'Kontak', icon: FaAddressBook },
-    { to: '/aktivitas', label: 'Aktivitas', icon: FaChartLine },
-    { to: '/sales-funnel', label: 'Sales Funnel', icon: FaBullhorn },
+    { to: '/customers',   label: 'Pelanggan',  icon: FaUsers },
+    { to: '/contacts',    label: 'Kontak',     icon: FaAddressBook },
+    { to: '/aktivitas',   label: 'Aktivitas',  icon: FaCalendarAlt },
+    { to: '/sales-plans', label: 'Sales Plan', icon: FaFileAlt },
   ],
+
   [ROLES.viewer]: [
     { to: '/customers', label: 'Pelanggan', icon: FaUsers },
   ],
-  // Untuk manager: ganti list biasa menjadi 1 menu "Update" dengan subMenu
+
   [ROLES.manager]: [
-    {
-      label: 'Update Data',
-      icon: FaFirefoxBrowser, 
-      
-      subMenu: [
-        { to: '/manager', label: 'Dashboard Kinerja', icon: FaChartLine },
-        { to: '/customers', label: 'Pelanggan', icon: FaUsers },
-        { to: '/ecrm-workspace', label: 'Update AM', icon: FaChartLine },
-        { to: '/produk', label: 'Produk & Solusi', icon: FaBoxOpen },
-        { to: '/monitoring', label: 'Monitoring Proses', icon: FaDesktop },
-        { to: '/manager/account-managers', label: 'Account Managers', icon: FaUsers },
-      ],
-    },
+    { to: '/manager',             label: 'Dashboard Kinerja', icon: FaChartLine },
+    { to: '/manager/sales-plans', label: 'Sales Plan',        icon: FaFileAlt },
   ],
 }
 

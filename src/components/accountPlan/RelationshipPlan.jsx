@@ -25,7 +25,7 @@ const MECHANISMS = ['WhatsApp', 'Email', 'Telepon', 'Meeting onsite', 'Meeting o
 const EFFORTS = ['Pembuatan grup WA dedicated', 'Regular check-in', 'Undangan workshop', 'Executive briefing', 'Kirim case study relevan', 'Sesi QBR', 'Follow up issue terbuka']
 
 const MODULES = [
-  { id: 'rp1', icon: FiUsers,         title: '1. The Health of the Relationship',  description: 'Status hubungan Telkom dengan Pelanggan',
+  { id: 'rp1', icon: FiUsers,         title: '1. The Health of the Relationship',  description: 'Status hubungan dengan Pelanggan',
     columns: [
       { key: 'pic', label: 'Nama PIC', type: 'text', required: true },
       { key: 'position', label: 'Jabatan', type: 'text', required: true },

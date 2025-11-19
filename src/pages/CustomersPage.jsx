@@ -17,6 +17,9 @@ export default function CustomersPage() {
   const [page, setPage] = useState(1)
   const [rowsPerPage, setRowsPerPage] = useState(10)
 
+  // ---------------------------------------------------------
+  // FILTER
+  // ---------------------------------------------------------
   const filtered = useMemo(() => {
     if (!query) return customersData
     const q = query.toLowerCase()
@@ -24,8 +27,8 @@ export default function CustomersPage() {
       (c) =>
         c.name.toLowerCase().includes(q) ||
         c.code.toLowerCase().includes(q) ||
-        c.budSegmen.toLowerCase().includes(q) ||
-        c.witel.toLowerCase().includes(q)
+        c.budSegmen.toLowerCase().includes(q) ||  // → INDUSTRI
+        c.witel.toLowerCase().includes(q)          // → WILAYAH
     )
   }, [query])
 
@@ -37,6 +40,9 @@ export default function CustomersPage() {
   const onPrev = () => setPage((p) => Math.max(1, p - 1))
   const onNext = () => setPage((p) => (endIndex < total ? p + 1 : p))
 
+  // ---------------------------------------------------------
+  // TABLE COLUMNS (UPDATED)
+  // ---------------------------------------------------------
   const columns = [
     {
       key: 'name',
@@ -55,14 +61,27 @@ export default function CustomersPage() {
         </>
       ),
     },
-    { key: 'budSegmen', label: 'BUD/Segmen' },
-    { key: 'witel', label: 'Witel' },
+
+    // 🔥 BUD/Segmen → INDUSTRI
+    {
+      key: 'budSegmen',
+      label: 'Industri',
+      render: (c) => <span className="text-neutral-700">{c.budSegmen}</span>,
+    },
+
+    // 🔥 Witel → WILAYAH
+    {
+      key: 'witel',
+      label: 'Wilayah',
+      render: (c) => <span className="text-neutral-700">{c.witel}</span>,
+    },
+
     { key: 'revenue', label: 'Revenue' },
     { key: 'collection', label: 'Collection' },
     { key: 'profitability', label: 'Profitability' },
   ]
 
-  // Calculate stats
+  // Stats
   const stats = [
     { label: 'Total Pelanggan', value: customersData.length.toLocaleString(), icon: FaUsers },
     { label: 'Active Customers', value: '1,180', icon: FaChartLine },
@@ -77,7 +96,7 @@ export default function CustomersPage() {
         subtitle="Kelola dan pantau semua data pelanggan Anda"
       />
 
-      {/* Stats Cards */}
+      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         {stats.map((stat, idx) => (
           <div key={idx} className="animate-slide-up" style={{ animationDelay: `${idx * 100}ms` }}>
@@ -86,24 +105,27 @@ export default function CustomersPage() {
         ))}
       </div>
 
-      {/* Filters Card */}
-  <Card className="bg-white">
+      {/* Filter Bar */}
+      <Card className="bg-white">
         <div className="flex flex-col md:flex-row gap-3 md:gap-4 md:items-center md:justify-between">
           <div className="flex-1 flex flex-col md:flex-row gap-3 md:gap-4">
-            <SearchInput value={query} onChange={setQuery} placeholder="Cari pelanggan, kode, BUD, atau Witel..." />
-            <Button variant="secondary" className="w-fit inline-flex items-center gap-2 hover:scale-105">
-              <FaFilter />
-              Filter
+            <SearchInput
+              value={query}
+              onChange={setQuery}
+              placeholder="Cari pelanggan, kode, industri, atau wilayah..."
+            />
+            <Button variant="secondary" className="inline-flex items-center gap-2 hover:scale-105">
+              <FaFilter /> Filter
             </Button>
           </div>
-          <Button variant="primary" className="w-fit inline-flex items-center gap-2">
-            <FaDownload />
-            Export
+
+          <Button variant="primary" className="inline-flex items-center gap-2">
+            <FaDownload /> Export
           </Button>
         </div>
       </Card>
 
-      {/* Table Card */}
+      {/* Table */}
       <div className="animate-slide-up" style={{ animationDelay: '300ms' }}>
         <Table
           columns={columns}
@@ -113,14 +135,15 @@ export default function CustomersPage() {
         />
       </div>
 
-      {/* Pagination Footer */}
-  <Card className="bg-white">
+      {/* Pagination */}
+      <Card className="bg-white">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="text-sm">
             <span className="text-neutral-800 font-semibold">
               {total === 0 ? 0 : startIndex + 1}-{endIndex}
             </span>
             <span className="text-neutral-500"> dari {total} Pelanggan</span>
+
             <div className="text-xs text-neutral-400 mt-2 space-y-0.5">
               <p>Source: Daman BUD, ERM dan MyTEnS</p>
               <p>Terakhir diperbarui 25 Agu 2025, 09:24 WIB</p>
