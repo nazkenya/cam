@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa'
+import Modal from '../ui/Modal' // ⬅️ ganti kalau pakai alias lain
 
 /**
  * Compact month-view calendar optimized for a square container.
@@ -43,7 +44,7 @@ export default function ActivityCalendarCompact({
       map[key].push(a)
     }
     // sort by time
-    Object.values(map).forEach(list =>
+    Object.values(map).forEach((list) =>
       list.sort((a, b) => (a.time || '').localeCompare(b.time || ''))
     )
     return map
@@ -97,7 +98,12 @@ export default function ActivityCalendarCompact({
           'focus:outline-none focus:ring-2 focus:ring-blue-400/50',
         ].join(' ')}
       >
-        <div className={['text-[11px] font-semibold leading-none', isToday ? 'text-blue-600' : 'text-neutral-700'].join(' ')}>
+        <div
+          className={[
+            'text-[11px] font-semibold leading-none',
+            isToday ? 'text-blue-600' : 'text-neutral-700',
+          ].join(' ')}
+        >
           {d}
         </div>
 
@@ -115,7 +121,9 @@ export default function ActivityCalendarCompact({
               />
             ))}
             {dayActs.length > 4 && (
-              <span className="text-[10px] text-neutral-500">+{dayActs.length - 4}</span>
+              <span className="text-[10px] text-neutral-500">
+                +{dayActs.length - 4}
+              </span>
             )}
           </div>
         )}
@@ -128,6 +136,16 @@ export default function ActivityCalendarCompact({
   for (let i = total; i < 42; i++) {
     cells.push(<div key={`trail-${i}`} className="rounded-lg" />)
   }
+
+  // Format tanggal untuk title modal
+  const formattedModalDate = modalDate
+    ? new Date(modalDate).toLocaleDateString('id-ID', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      })
+    : ''
 
   return (
     <>
@@ -179,80 +197,60 @@ export default function ActivityCalendarCompact({
         </div>
       </div>
 
-      {/* Modal */}
-      {modalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center"
-          aria-modal="true"
-          role="dialog"
-        >
-          <div
-            className="absolute inset-0 bg-black/30"
-            onClick={() => setModalOpen(false)}
-          />
-          <div className="relative z-10 w-[92vw] max-w-lg rounded-2xl bg-white shadow-xl border border-neutral-200">
-            <div className="p-4 border-b border-neutral-200 flex items-center justify-between">
-              <div>
-                <div className="text-sm text-neutral-500">Aktivitas</div>
-                <div className="text-base font-semibold text-neutral-800">
-                  {modalDate}
-                </div>
-              </div>
+      {/* Modal pakai komponen Modal global */}
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={formattedModalDate ? `Aktivitas • ${formattedModalDate}` : 'Aktivitas'}
+        panelClassName="max-w-lg"
+      >
+        <div className="space-y-3">
+          {modalActivities.length === 0 ? (
+            <div className="text-sm text-neutral-500">
+              Tidak ada aktivitas pada tanggal ini.
+            </div>
+          ) : (
+            modalActivities.map((a) => (
               <button
-                onClick={() => setModalOpen(false)}
-                className="px-3 py-1.5 rounded-lg border border-neutral-200 text-neutral-700 hover:bg-neutral-50 text-sm"
+                key={a.id}
+                onClick={() => {
+                  setModalOpen(false)
+                  onActivityClick(a)
+                }}
+                className="w-full text-left rounded-xl border border-neutral-200 hover:bg-neutral-50 p-3 transition"
               >
-                Tutup
-              </button>
-            </div>
-
-            <div className="p-4 space-y-3 max-h-[65vh] overflow-auto">
-              {modalActivities.length === 0 ? (
-                <div className="text-sm text-neutral-500">Tidak ada aktivitas.</div>
-              ) : (
-                modalActivities.map((a) => (
-                  <button
-                    key={a.id}
-                    onClick={() => {
-                      setModalOpen(false)
-                      onActivityClick(a)
-                    }}
-                    className="w-full text-left rounded-xl border border-neutral-200 hover:bg-neutral-50 p-3 transition"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="text-[13px] font-semibold text-neutral-900">
-                          {a.title}
-                        </div>
-                        <div className="text-[12px] text-neutral-600">
-                          {a.time || '-'} • {a.location || '—'}
-                        </div>
-                      </div>
-                      <span
-                        className={[
-                          'mt-0.5 inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full',
-                          a.status === 'completed'
-                            ? 'bg-green-100 text-green-700'
-                            : new Date(`${a.date}T${a.time || '00:00'}`) < new Date()
-                            ? 'bg-yellow-100 text-yellow-700'
-                            : 'bg-blue-100 text-blue-700',
-                        ].join(' ')}
-                      >
-                        ● {a.status || 'upcoming'}
-                      </span>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-[13px] font-semibold text-neutral-900">
+                      {a.title}
                     </div>
-                    {a.description && (
-                      <div className="mt-1.5 text-[12px] text-neutral-700 line-clamp-2">
-                        {a.description}
-                      </div>
-                    )}
-                  </button>
-                ))
-              )}
-            </div>
-          </div>
+                    <div className="text-[12px] text-neutral-600">
+                      {a.time || '-'} • {a.location || '—'}
+                    </div>
+                  </div>
+                  <span
+                    className={[
+                      'mt-0.5 inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full',
+                      a.status === 'completed'
+                        ? 'bg-green-100 text-green-700'
+                        : new Date(`${a.date}T${a.time || '00:00'}`) < new Date()
+                        ? 'bg-yellow-100 text-yellow-700'
+                        : 'bg-blue-100 text-blue-700',
+                    ].join(' ')}
+                  >
+                    ● {a.status || 'upcoming'}
+                  </span>
+                </div>
+                {a.description && (
+                  <div className="mt-1.5 text-[12px] text-neutral-700 line-clamp-2">
+                    {a.description}
+                  </div>
+                )}
+              </button>
+            ))
+          )}
         </div>
-      )}
+      </Modal>
     </>
   )
 }
