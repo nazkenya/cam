@@ -139,22 +139,27 @@ const buildFormState = (data) => {
   }
 }
 
-export default function ActivityFormModal({ open, onClose, onSubmit, initialData = null }) {
-  const [formData, setFormData] = useState(buildFormState(initialData))
+export default function ActivityFormModal({ open, onClose, onSubmit, initialData = null, lockedCustomer = null }) {
+  const [formData, setFormData] = useState(
+    buildFormState(initialData || (lockedCustomer ? { withCustomer: true, customer: lockedCustomer } : null))
+  )
   const [customerSearch, setCustomerSearch] = useState('')
   const [contactSearch, setContactSearch] = useState('')
+  const lockedCustomerName = lockedCustomer
+    ? (typeof lockedCustomer === 'string' ? lockedCustomer : lockedCustomer?.name)
+    : null
 
   useEffect(() => {
-    setFormData(buildFormState(initialData))
-  }, [initialData])
+    setFormData(buildFormState(initialData || (lockedCustomer ? { withCustomer: true, customer: lockedCustomer } : null)))
+  }, [initialData, lockedCustomer])
 
   const availableCustomers = useMemo(
     () => customersData.map((customer) => simplifyCustomer(customer)),
-    [customersData]
+    []
   )
   const availableContacts = useMemo(
     () => contactsData.map((contact) => simplifyContact(contact)),
-    [contactsData]
+    []
   )
 
   const filteredCustomers = useMemo(() => {
@@ -188,7 +193,14 @@ export default function ActivityFormModal({ open, onClose, onSubmit, initialData
     e.preventDefault()
     const activityData = {
       ...formData,
-      customer: formData.withCustomer ? formData.customer?.name || '' : '',
+      customer: lockedCustomer
+        ? typeof lockedCustomer === 'string'
+          ? lockedCustomer
+          : lockedCustomer.name
+        : formData.withCustomer
+        ? formData.customer?.name || ''
+        : '',
+      withCustomer: lockedCustomer ? true : formData.withCustomer,
       invitees: formData.invitees.map((participant) => participant.name),
     }
     onSubmit(activityData)
@@ -236,6 +248,7 @@ export default function ActivityFormModal({ open, onClose, onSubmit, initialData
   )
 
   const handleToggleCustomer = (val) => {
+    if (lockedCustomer) return
     setFormData((prev) => {
       return {
         ...prev,
@@ -400,63 +413,69 @@ export default function ActivityFormModal({ open, onClose, onSubmit, initialData
                           .join(' • ')}
                       </p>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      type="button"
-                      onClick={() => {
-                        handleChange('customer', null)
-                        setCustomerSearch('')
-                      }}
-                    >
-                      Hapus Pilihan
-                    </Button>
+                    {!lockedCustomer && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        type="button"
+                        onClick={() => {
+                          handleChange('customer', null)
+                          setCustomerSearch('')
+                        }}
+                      >
+                        Hapus Pilihan
+                      </Button>
+                    )}
                   </div>
                 )}
 
-                <div className="space-y-2">
-                  <SearchInput
-                    value={customerSearch}
-                    onChange={setCustomerSearch}
-                    placeholder="Cari nama, kode, atau lokasi customer..."
-                    variant="subtle"
-                  />
-                  <div className="rounded-xl border border-neutral-200 bg-white divide-y max-h-56 overflow-hidden overflow-y-auto">
-                    {filteredCustomers.length === 0 ? (
-                      <div className="p-4 text-center text-sm text-neutral-500">Customer tidak ditemukan</div>
-                    ) : (
-                      filteredCustomers.map((customer) => {
-                        const isSelected = formData.customer?.id === customer.id
-                        return (
-                          <button
-                            key={customer.id}
-                            type="button"
-                            className={`w-full px-4 py-3 text-left transition ${
-                              isSelected ? 'bg-[#EEF2FF]' : 'hover:bg-neutral-50'
-                            }`}
-                            onClick={() => handleSelectCustomer(customer.id)}
-                          >
-                            <div className="flex items-center justify-between gap-3">
-                              <div>
-                                <p className="text-sm font-semibold text-neutral-900">{customer.name}</p>
-                                <p className="text-xs text-neutral-600">
-                                  {[customer.code, customer.witel || customer.budSegmen].filter(Boolean).join(' • ')}
-                                </p>
+                {!lockedCustomer && (
+                  <div className="space-y-2">
+                    <SearchInput
+                      value={customerSearch}
+                      onChange={setCustomerSearch}
+                      placeholder="Cari nama, kode, atau lokasi customer..."
+                      variant="subtle"
+                    />
+                    <div className="rounded-xl border border-neutral-200 bg-white divide-y max-h-56 overflow-hidden overflow-y-auto">
+                      {filteredCustomers.length === 0 ? (
+                        <div className="p-4 text-center text-sm text-neutral-500">Customer tidak ditemukan</div>
+                      ) : (
+                        filteredCustomers.map((customer) => {
+                          const isSelected = formData.customer?.id === customer.id
+                          return (
+                            <button
+                              key={customer.id}
+                              type="button"
+                              className={`w-full px-4 py-3 text-left transition ${
+                                isSelected ? 'bg-[#EEF2FF]' : 'hover:bg-neutral-50'
+                              }`}
+                              onClick={() => handleSelectCustomer(customer.id)}
+                            >
+                              <div className="flex items-center justify-between gap-3">
+                                <div>
+                                  <p className="text-sm font-semibold text-neutral-900">{customer.name}</p>
+                                  <p className="text-xs text-neutral-600">
+                                    {[customer.code, customer.witel || customer.budSegmen].filter(Boolean).join(' • ')}
+                                  </p>
+                                </div>
+                                {isSelected && (
+                                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#2C5CC5] text-white">
+                                    Dipilih
+                                  </span>
+                                )}
                               </div>
-                              {isSelected && (
-                                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#2C5CC5] text-white">
-                                  Dipilih
-                                </span>
-                              )}
-                            </div>
-                          </button>
-                        )
-                      })
-                    )}
+                            </button>
+                          )
+                        })
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
                 <p className="text-xs text-neutral-500">
-                  Customer diambil langsung dari portofolio akun yang kamu kelola.
+                  {lockedCustomerName
+                    ? `Aktivitas ini otomatis dikaitkan dengan ${lockedCustomerName}.`
+                    : 'Customer diambil langsung dari portofolio akun yang kamu kelola.'}
                 </p>
               </div>
             )}

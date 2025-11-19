@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { FaUser, FaLock, FaArrowRight } from 'react-icons/fa'
 import { useAuth } from '../auth/AuthContext'
-import { ALL_ROLES } from '../auth/roles'
+import { ALL_ROLES, ROLES } from '../auth/roles'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -10,12 +10,27 @@ export default function Login() {
   const { login } = useAuth()
   const [username, setUsername] = useState('')
   const [role, setRole] = useState(ALL_ROLES[0])
-  const from = location.state?.from?.pathname || '/'
+
+  // Kalau user datang dari protected route, React Router biasanya kirim state.from
+  const from = location.state?.from?.pathname
+
+  // Map default homepage per role
+  const DEFAULT_HOME_BY_ROLE = {
+    [ROLES.sales]: '/',
+    [ROLES.manager]: '/manager',
+    [ROLES.admin]: '/executive',
+    [ROLES.viewer]: '/', // optional, kalau kamu punya role viewer
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
     await login({ username, role })
-    navigate(from, { replace: true })
+
+    // Kalau ada `from` dan bukan root, hormati tujuan awal
+    const fallbackPath = DEFAULT_HOME_BY_ROLE[role] || '/'
+    const targetPath = from && from !== '/' ? from : fallbackPath
+
+    navigate(targetPath, { replace: true })
   }
 
   return (
@@ -78,7 +93,7 @@ export default function Login() {
               </div>
             </label>
 
-            {/* Role preview chip (UI/UX improvement without changing palette) */}
+            {/* Role preview chip */}
             <div className="flex items-center gap-2 pt-1">
               <span className="text-xs text-neutral-500">You will sign in as</span>
               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border border-[#E60012]/30 text-[#B00010] bg-[#E60012]/10">

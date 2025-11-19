@@ -32,7 +32,7 @@ export default function ProfileHeader({ name, code, tag, nipnas, onBack }) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button className="ring-1 ring-[#2C5CC5] text-[#2C5CC5] bg-[#F0F6FF] hover:bg-[#E9F2FF]">Lihat Riwayat</Button>
+          <Button variant="back">Lihat Riwayat</Button>
           {onBack && (
             <Button variant="back" onClick={onBack}>
               <FiArrowLeft className="w-4 h-4" />

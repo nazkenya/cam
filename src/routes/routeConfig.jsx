@@ -17,6 +17,7 @@ import ManagerPerformanceDashboard from '../pages/ManagerPerformanceDashboard'
 import ExecutivePerformanceDashboard from '../pages/ExecutivePerformanceDashboard'
 import ManagerDashboard from '@pages/ManagerDashboard'
 import ExecutiveRegionPerformance from '@pages/ExecutiveRegionPerformance'
+import AccountManagerDashboard from '../pages/AccountManagerDashboard'
 
 // Define routes and which roles can access them.
 // Add your new role to the arrays below as needed.
@@ -25,7 +26,8 @@ export const routes = [
   { path: '/403', element: <NotAuthorized />, public: true },
 
   // Protected routes
-  { path: '/', element: <Dashboard />, roles: [ROLES.admin, ROLES.sales, ROLES.viewer, ROLES.manager] },
+  { path: '/', element: <AccountManagerDashboard />, roles: [ROLES.sales] },
+  // Fallback homepage for other roles
   { path: '/customers', element: <CustomersPage />, roles: [ROLES.admin, ROLES.sales, ROLES.manager] },
   { path: '/customers/:id', element: <CustomerDetail />, roles: [ROLES.admin, ROLES.sales, ROLES.manager] },
   { path: '/customers/:id/sales-plan/:planId', element: <SalesPlanDetail />, roles: [ROLES.admin, ROLES.sales, ROLES.manager] },
@@ -42,9 +44,4 @@ export const routes = [
   { path: '/manager/account-managers', element: <AccountManagers />, roles: [ROLES.manager, ROLES.admin] },
   { path: '/executive', element: <ExecutivePerformanceDashboard />, roles: [ROLES.admin] },
   { path: '/executive/region', element: <ExecutiveRegionPerformance />, roles: [ROLES.admin] },
-
-  // Examples for future pages:
-  // { path: '/produk', element: <ProdukPage />, roles: [ROLES.admin, ROLES.manager] },
-  // { path: '/monitoring', element: <MonitoringPage />, roles: [ROLES.admin, ROLES.manager] },
-  // { path: '/sales-funnel', element: <SalesFunnelPage />, roles: [ROLES.admin, ROLES.sales] },
 ]

@@ -1,6 +1,4 @@
-import React from 'react'
-
-export function Badge({ children, variant = 'neutral', className = '' }) {
+export function Badge({ children, variant = null, className = '' }) {
   const styles = {
     success: 'bg-green-100 text-green-700 ring-1 ring-green-200',
     danger: 'bg-red-100 text-red-700 ring-1 ring-red-200',
@@ -10,7 +8,13 @@ export function Badge({ children, variant = 'neutral', className = '' }) {
   }
 
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${styles[variant]} ${className}`}>
+    <span
+      className={[
+        'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
+        variant ? styles[variant] : '',
+        className, // ✔️ sekarang props override semua
+      ].join(' ')}
+    >
       {children}
     </span>
   )

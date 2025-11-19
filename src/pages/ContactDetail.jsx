@@ -18,6 +18,9 @@ import {
   FaTiktok,
   FaTwitter,
   FaUserTie,
+  FaBell,
+  FaStar,
+  FaRegStar,
 } from 'react-icons/fa'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
@@ -362,6 +365,33 @@ const getInitials = (name = '') => {
   return `${first}${last}`.toUpperCase()
 }
 
+// --- Mock interactions generator (fallback when a contact has no interactions) ---
+const ACTIVITY_TYPES = ['Meeting', 'Call', 'Email', 'Demo', 'Follow-up', 'Workshop']
+const ACTIVITY_CHANNELS = ['Onsite', 'Zoom', 'Teams', 'Phone', 'Email']
+
+const pickFrom = (arr, idx) => arr[Math.abs(idx) % arr.length]
+
+function generateMockInteractions(contact) {
+  const basis = (contact?.id || contact?.name || contact?.fullName || contact?.fullname || 'contact').toString()
+  const seed = basis.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0)
+  const now = new Date()
+  const count = 3 + (seed % 3) // 3-5 items
+  return Array.from({ length: count }).map((_, i) => {
+    const daysAgo = ((seed + i * 3) % 20) + 1
+    const d = new Date(now)
+    d.setDate(d.getDate() - daysAgo)
+    const type = pickFrom(ACTIVITY_TYPES, seed + i)
+    const channel = pickFrom(ACTIVITY_CHANNELS, seed + 2 * i)
+    return {
+      id: `mock-act-${seed}-${i}`,
+      type,
+      channel,
+      date: d.toISOString().slice(0, 10),
+      summary: `${type} terkait ${contact?.company || 'customer'} (${channel})`,
+    }
+  })
+}
+
 const buildContactProfile = (baseContact) => {
   if (!baseContact) return null
   const enrichment = CONTACT_ENRICHMENTS[baseContact.id] || {}
@@ -386,7 +416,10 @@ const buildContactProfile = (baseContact) => {
   profile.socials = { ...DEFAULT_PROFILE.socials, ...enrichment.socials }
   profile.companySlug = enrichment.companySlug || slugify(baseContact.company || 'customer')
   profile.notes = enrichment.notes || DEFAULT_PROFILE.notes
-  profile.interactions = enrichment.interactions || DEFAULT_PROFILE.interactions
+  const enrichedInteractions = enrichment.interactions || DEFAULT_PROFILE.interactions
+  profile.interactions = (enrichedInteractions && enrichedInteractions.length > 0)
+    ? enrichedInteractions
+    : generateMockInteractions(profile)
   profile.fullName = profile.fullName || profile.name
   return profile
 }
@@ -464,6 +497,37 @@ export default function ContactDetailPage() {
   const [newNote, setNewNote] = useState('')
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false)
 
+  // Important PIC state (persisted in localStorage)
+  const loadImportant = (contactId) => {
+    try {
+      const arr = JSON.parse(localStorage.getItem('importantContactIds') || '[]')
+      return Array.isArray(arr) && contactId ? arr.includes(contactId) : false
+    } catch {
+      return false
+    }
+  }
+  const saveImportant = (contactId, flag) => {
+    try {
+      const arr = JSON.parse(localStorage.getItem('importantContactIds') || '[]')
+      const set = new Set(Array.isArray(arr) ? arr : [])
+      if (flag) set.add(contactId)
+      else set.delete(contactId)
+      localStorage.setItem('importantContactIds', JSON.stringify([...set]))
+    } catch (e) {
+      // ignore persistence errors
+      console.warn('Failed to persist importantContactIds', e)
+    }
+  }
+  const [isImportant, setIsImportant] = useState(() => loadImportant(id))
+  useEffect(() => {
+    setIsImportant(loadImportant(id))
+  }, [id])
+  const toggleImportant = () => {
+    const next = !isImportant
+    setIsImportant(next)
+    saveImportant(id, next)
+  }
+
   useEffect(() => {
     const profile = buildContactProfile(baseContact)
     setContact(profile)
@@ -472,13 +536,13 @@ export default function ContactDetailPage() {
     setNewNote('')
     setIsEditingInfo(false)
     setChangeLog([])
-  }, [baseContact?.id])
+  }, [baseContact])
 
   useEffect(() => {
     if (contact) {
       setNotes(contact.notes || [])
     }
-  }, [contact?.id])
+  }, [contact])
 
   const handleStartEdit = () => {
     if (!contact) return
@@ -595,6 +659,45 @@ export default function ContactDetailPage() {
   
   const displayAvatarUrl = isEditingInfo ? infoDraft.avatarUrl : contact.avatarUrl
 
+  // Relationship management helpers
+  const formatDateId = (d) => (d ? d.toLocaleDateString('id-ID', { dateStyle: 'medium' }) : '-')
+  const interactions = contact.interactions || []
+  const lastInteraction = interactions.reduce((latest, curr) => {
+    const currDate = curr?.date ? new Date(curr.date) : null
+    const latestDate = latest?.date ? new Date(latest.date) : null
+    if (!currDate) return latest
+    if (!latestDate) return curr
+    return currDate > latestDate ? curr : latest
+  }, null)
+  const lastDateObj = lastInteraction?.date ? new Date(lastInteraction.date) : null
+  const today = new Date()
+  // normalize to local midnight to avoid partial days
+  const midnight = (dt) => new Date(dt.getFullYear(), dt.getMonth(), dt.getDate())
+  const daysSinceLast = lastDateObj ? Math.floor((midnight(today) - midnight(lastDateObj)) / 86400000) : null
+  const frequencyDays = (() => {
+    switch (contact.relationshipStatus) {
+      case 'Detractor':
+        return 7
+      case 'Promotor':
+        return 21
+      case 'Neutral':
+      default:
+        return 14
+    }
+  })()
+  const daysUntilNext = daysSinceLast != null ? frequencyDays - daysSinceLast : null
+  const nextDateObj = lastDateObj ? new Date(lastDateObj.getTime() + frequencyDays * 86400000) : null
+  let reminderBadge = { variant: 'neutral', text: 'Tidak ada data' }
+  if (daysUntilNext != null) {
+    if (daysUntilNext < 0) {
+      reminderBadge = { variant: 'danger', text: `Terlambat ${Math.abs(daysUntilNext)} hari` }
+    } else if (daysUntilNext <= 3) {
+      reminderBadge = { variant: 'info', text: `Jatuh tempo ${daysUntilNext} hari lagi` }
+    } else {
+      reminderBadge = { variant: 'success', text: `${daysUntilNext} hari lagi` }
+    }
+  }
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'information':
@@ -668,7 +771,27 @@ export default function ContactDetailPage() {
             
             <div className="space-y-2">
               <div>
-                <p className="text-2xl font-semibold text-neutral-900">{contact.fullName || contact.name}</p>
+                <p className="text-2xl font-semibold text-neutral-900 flex items-center gap-2">
+                  {contact.fullName || contact.name}
+                  <button
+                    type="button"
+                    onClick={toggleImportant}
+                    className="inline-flex items-center transition-opacity hover:opacity-90"
+                    title={isImportant ? 'Batalkan penanda penting' : 'Tandai sebagai penting'}
+                    aria-label={isImportant ? 'Batalkan penanda penting' : 'Tandai sebagai penting'}
+                  >
+                    {isImportant ? (
+                      <FaStar className="text-[#E60012] text-sm" />
+                    ) : (
+                      <FaRegStar className="text-neutral-400 text-sm" />
+                    )}
+                  </button>
+                  {isImportant && (
+                    <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                      Penting
+                    </span>
+                  )}
+                </p>
                 <p className="text-neutral-600 flex items-center gap-2 text-sm">
                   {/* PERUBAHAN: Ikon diberi warna */}
                   <FaUserTie className="text-blue-500" />
@@ -717,6 +840,91 @@ export default function ContactDetailPage() {
           </div>
         </div>
       </Card>
+
+      {/* Manajemen Hubungan card */}
+<Card className="p-0 overflow-hidden">
+  <div className="p-3.5 md:p-4 flex flex-col gap-2.5">
+    {/* Header */}
+    <div className="flex items-start justify-between gap-3">
+      <div className="space-y-0.5">
+        <h3 className="text-[15px] font-semibold text-[#2C5CC5] leading-tight">
+          Manajemen Hubungan
+        </h3>
+        <p className="text-[12.5px] text-neutral-500">
+          Pantau ritme komunikasi dengan PIC ini.
+        </p>
+      </div>
+      <Badge
+        variant={reminderBadge.variant}
+        className="px-2 py-0.5 text-[11px] font-medium rounded-full"
+      >
+        {reminderBadge.text}
+      </Badge>
+    </div>
+
+    {/* Info Cards */}
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 md:gap-3 text-sm">
+      {/* Last Contact */}
+      <div className="rounded-lg border border-neutral-200 bg-white p-3">
+        <p className="text-[11px] uppercase tracking-wide text-neutral-500">
+          Terakhir Berhubungan
+        </p>
+        <p className="mt-1 text-[16px] font-semibold text-neutral-900 flex items-center gap-2 leading-snug">
+          <FaRegCalendarAlt className="text-neutral-400" />
+          {lastDateObj ? formatDateId(lastDateObj) : '-'}
+        </p>
+        <p className="text-[12px] text-neutral-500 mt-0.5">
+          {daysSinceLast != null ? `${daysSinceLast} hari lalu` : '—'}
+        </p>
+      </div>
+
+      {/* Target Frequency */}
+      <div className="rounded-lg border border-neutral-200 bg-white p-3">
+        <p className="text-[11px] uppercase tracking-wide text-neutral-500">
+          Frekuensi Target
+        </p>
+        <p className="mt-1 text-[16px] font-semibold text-neutral-900 leading-snug">
+          Setiap {frequencyDays} hari
+        </p>
+        <p className="text-[12px] text-neutral-500 mt-0.5">
+          Berdasarkan status relasi: {contact.relationshipStatus}
+        </p>
+      </div>
+
+      {/* Next Reminder */}
+      <div className="rounded-lg border border-neutral-200 bg-white p-3">
+        <p className="text-[11px] uppercase tracking-wide text-neutral-500">
+          Pengingat Berikutnya
+        </p>
+        <p className="mt-1 text-[16px] font-semibold text-neutral-900 flex items-center gap-2 leading-snug">
+          <FaBell className="text-amber-500" />
+          {nextDateObj ? formatDateId(nextDateObj) : '-'}
+        </p>
+        <p className="text-[12px] text-neutral-500 mt-0.5">
+          {daysUntilNext != null
+            ? daysUntilNext >= 0
+              ? `${daysUntilNext} hari lagi`
+              : `Terlambat ${Math.abs(daysUntilNext)} hari`
+            : '—'}
+        </p>
+      </div>
+    </div>
+
+    {/* CTA */}
+    <div className="flex justify-end mt-1">
+      <Button
+        variant="secondary"
+        size="sm"
+        onClick={() => navigate('/activities')}
+        className="inline-flex items-center gap-2 px-3 py-1.5 text-[13px]"
+      >
+        <FaShareAlt /> Tambah Aktivitas
+      </Button>
+    </div>
+  </div>
+</Card>
+
+
 
       <Card className="p-0 overflow-hidden">
         <div className="flex border-b border-neutral-200 px-6 gap-6">
