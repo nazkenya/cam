@@ -9,6 +9,7 @@ import SearchInput from '@components/ui/SearchInput'
 import Select from '@components/ui/Select'
 import { FiPaperclip } from 'react-icons/fi'
 import { FaFilter } from 'react-icons/fa'
+import { ROLES, ROLE_LABELS } from '@auth/roles'
 
 import customers from '@/data/mockCustomers'
 
@@ -25,6 +26,9 @@ const statusBadge = (status) => {
   if (s === 'Closed') return 'bg-blue-50 text-blue-700 border border-blue-200'
   return 'bg-neutral-100 text-neutral-700 border border-neutral-200'
 }
+
+const MANAGER_LABEL = ROLE_LABELS[ROLES.manager] || 'Manager Business Service'
+const ACCOUNT_MANAGER_LABEL = ROLE_LABELS[ROLES.sales] || 'Account Manager'
 
 export default function ManagerSalesPlans() {
   const navigate = useNavigate()
@@ -252,7 +256,7 @@ export default function ManagerSalesPlans() {
                   </p>
                 )}
 
-                {/* Lampiran + Catatan Manager */}
+                {/* Lampiran + Catatan Manager Business Service */}
                 <div className="grid gap-3 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
                   {/* Lampiran Sales Plan */}
                   <div className="space-y-1.5">
@@ -288,7 +292,7 @@ export default function ManagerSalesPlans() {
                   {/* Catatan Manager (kalau sudah pernah diisi) */}
                   <div className="space-y-1.5">
                     <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-                      Catatan Manager
+                      Catatan {MANAGER_LABEL}
                     </p>
                     {plan.managerComment ? (
                       <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-700">
@@ -405,7 +409,7 @@ export default function ManagerSalesPlans() {
 
           <div>
             <label className="text-sm font-medium text-neutral-700 mb-1 block">
-              Catatan untuk Sales
+              Catatan untuk {ACCOUNT_MANAGER_LABEL}
             </label>
             <textarea
               value={decisionModal.comment}
@@ -417,10 +421,10 @@ export default function ManagerSalesPlans() {
               }
               rows={4}
               className="w-full rounded-xl border border-neutral-200 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2C5CC5]/30"
-              placeholder="Tuliskan alasan dan masukan yang bisa dilihat oleh Account Manager…"
+              placeholder={`Tuliskan alasan dan masukan yang bisa dilihat oleh ${ACCOUNT_MANAGER_LABEL}…`}
             />
             <p className="mt-1 text-[11px] text-neutral-400">
-              Catatan ini akan tersimpan di sales plan dan dapat dilihat oleh role Sales.
+              Catatan ini akan tersimpan di sales plan dan dapat dilihat oleh peran {ACCOUNT_MANAGER_LABEL}.
             </p>
           </div>
         </div>

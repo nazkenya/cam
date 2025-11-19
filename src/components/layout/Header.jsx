@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { FaBell } from 'react-icons/fa'
 import { useAuth } from '../../auth/AuthContext'
-import { ROLES } from '../../auth/roles'
+import { ROLES, ROLE_LABELS } from '../../auth/roles'
 import mockNotifications from '../../data/mockNotifications'
 
 export default function Header() {
@@ -12,6 +12,7 @@ export default function Header() {
   const bellRef = useRef(null)
 
   const isNotificationRole = role === ROLES.manager || role === ROLES.admin || role === ROLES.sales
+  const roleLabel = role ? (ROLE_LABELS[role] || role) : null
 
   useEffect(() => {
     if (isNotificationRole) {
@@ -125,10 +126,10 @@ export default function Header() {
           </div>
           <div className="text-sm">
             <div className="font-semibold text-neutral-800">{user?.name || 'Guest'}</div>
-            {role && (
+            {roleLabel && (
               <div className="text-xs text-neutral-500 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#2ECC71]"></span>
-                {role}
+                {roleLabel}
               </div>
             )}
           </div>

@@ -621,7 +621,7 @@ const history = React.useMemo(() => {
     {
       id: 'h1',
       timestamp: '2025-11-15T09:32:00.000Z',
-      userName: 'Admin Satu',
+      userName: 'Top-Level Manager Satu',
       userRole: 'Account Manager',
       changes: [
         {
@@ -639,7 +639,7 @@ const history = React.useMemo(() => {
     {
       id: 'h2',
       timestamp: '2025-11-10T11:55:00.000Z',
-      userName: 'Admin Dua',
+      userName: 'Top-Level Manager Dua',
       userRole: 'Data Steward',
       changes: [
         { field: 'Industri', from: 'Lainnya', to: 'Teknologi' },
@@ -1335,7 +1335,7 @@ const history = React.useMemo(() => {
               <FiUser /> Oleh
             </div>
             <div className="text-neutral-900">
-              <Badge variant="neutral">Admin</Badge>
+              <Badge variant="neutral">Top-Level Manager</Badge>
             </div>
           </div>
         </div>

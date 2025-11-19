@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { FaUser, FaLock, FaArrowRight } from 'react-icons/fa'
 import { useAuth } from '../auth/AuthContext'
-import { ALL_ROLES, ROLES } from '../auth/roles'
+import { ALL_ROLES, ROLES, ROLE_LABELS } from '../auth/roles'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -19,7 +19,6 @@ export default function Login() {
     [ROLES.sales]: '/',
     [ROLES.manager]: '/manager',
     [ROLES.admin]: '/executive',
-    [ROLES.viewer]: '/', // optional, kalau kamu punya role viewer
   }
 
   async function handleSubmit(e) {
@@ -45,8 +44,8 @@ export default function Login() {
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-[#E60012] to-[#B00010] shadow-xl mb-4">
             <span className="text-3xl font-bold text-white">M</span>
           </div>
-          <h1 className="text-3xl font-semibold text-neutral-800 mb-2">Account Management System</h1>
-          <p className="text-neutral-500">Telkom Enterprise Solution</p>
+          <h1 className="text-3xl font-semibold text-neutral-800 mb-2">Key Account Management System</h1>
+          <p className="text-neutral-500">Digital Service Enterprise Solution</p>
         </div>
 
         {/* Login Form */}
@@ -86,7 +85,7 @@ export default function Login() {
                 >
                   {ALL_ROLES.map((r) => (
                     <option key={r} value={r}>
-                      {r.charAt(0).toUpperCase() + r.slice(1)}
+                      {ROLE_LABELS[r] || r}
                     </option>
                   ))}
                 </select>
@@ -97,7 +96,7 @@ export default function Login() {
             <div className="flex items-center gap-2 pt-1">
               <span className="text-xs text-neutral-500">You will sign in as</span>
               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border border-[#E60012]/30 text-[#B00010] bg-[#E60012]/10">
-                {role.charAt(0).toUpperCase() + role.slice(1)}
+                {ROLE_LABELS[role] || role}
               </span>
             </div>
           </div>
@@ -119,7 +118,7 @@ export default function Login() {
 
         {/* Footer */}
         <p className="text-center text-sm text-neutral-500 mt-6">
-          © 2025 Telkom Indonesia. All rights reserved.
+          © 2025. All rights reserved.
         </p>
       </div>
     </div>

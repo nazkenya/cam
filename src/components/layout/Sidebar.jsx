@@ -4,46 +4,41 @@ import {
   FaHome,
   FaChartLine,
   FaUsers,
-  FaBoxOpen,
-  FaBullhorn,
   FaFileAlt,
-  FaDesktop,
-  FaHandshake,
   FaChevronDown,
   FaSearch,
   FaPlus,
   FaQuestionCircle,
   FaCog,
   FaSignOutAlt,
-  FaFirefoxBrowser,
   FaAddressBook,
-  FaCalendarAlt
+  FaCalendarAlt,
 } from 'react-icons/fa'
 import { useAuth } from '../../auth/AuthContext'
 import { ROLES } from '../../auth/roles'
 
 // Define per-role menus. Add items for your new role here.
 const MENU = {
-  base: [{ to: '/', label: 'Beranda', icon: FaHome }],
+  base: [], // tidak ada menu universal di semua role
+
   [ROLES.admin]: [
     { to: '/executive', label: 'Executive Dashboard', icon: FaChartLine },
   ],
+
   [ROLES.sales]: [
-    { to: '/customers',   label: 'Pelanggan',  icon: FaUsers },
-    { to: '/contacts',    label: 'Kontak',     icon: FaAddressBook },
-    { to: '/aktivitas',   label: 'Aktivitas',  icon: FaCalendarAlt },
+    { to: '/', label: 'Beranda', icon: FaHome }, // hanya untuk Account Manager
+    { to: '/customers', label: 'Pelanggan', icon: FaUsers },
+    { to: '/contacts', label: 'Kontak', icon: FaAddressBook },
+    { to: '/aktivitas', label: 'Aktivitas', icon: FaCalendarAlt },
     { to: '/sales-plans', label: 'Sales Plan', icon: FaFileAlt },
   ],
 
-  [ROLES.viewer]: [
-    { to: '/customers', label: 'Pelanggan', icon: FaUsers },
-  ],
-
   [ROLES.manager]: [
-    { to: '/manager',             label: 'Dashboard Kinerja', icon: FaChartLine },
-    { to: '/manager/sales-plans', label: 'Sales Plan',        icon: FaFileAlt },
+    { to: '/manager', label: 'Dashboard Kinerja', icon: FaChartLine },
+    { to: '/manager/sales-plans', label: 'Sales Plan', icon: FaFileAlt },
   ],
-}
+};
+
 
 export default function Sidebar() {
   const { role, logout } = useAuth()

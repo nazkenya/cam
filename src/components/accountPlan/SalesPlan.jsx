@@ -7,8 +7,10 @@ import FormInput from '@components/ui/FormInput'
 import SearchInput from '@components/ui/SearchInput'
 import { FiTrash2, FiPlus, FiPaperclip } from 'react-icons/fi'
 import { useAuth } from '@auth/AuthContext'
+import { ROLES, ROLE_LABELS } from '@auth/roles'
 
 const STATUSES = ['Draft', 'Active', 'Closed']
+const ACCOUNT_MANAGER_LABEL = ROLE_LABELS[ROLES.sales] || 'Account Manager'
 
 const statusClass = (s) =>
   s === 'Active'
@@ -99,7 +101,7 @@ export default function SalesPlan({ customerId = 'demo', customerName = '' }) {
       ...form,
       customerId,
       customerName,
-      ownerName: user?.name || 'Sales',
+      ownerName: user?.name || ACCOUNT_MANAGER_LABEL,
       ownerId: user?.id,
       ownerRole: role,
       approvalStatus: 'Pending',

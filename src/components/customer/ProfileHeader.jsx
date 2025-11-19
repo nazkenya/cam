@@ -31,7 +31,7 @@ export default function ProfileHeader({ name, code, tag, nipnas, onBack }) {
       {
         id: 'h1',
         timestamp: '2025-11-15T09:32:00.000Z',
-        userName: 'Admin Satu',
+        userName: 'Top-Level Manager Satu',
         userRole: 'Account Manager',
         changes: [
           {
@@ -49,7 +49,7 @@ export default function ProfileHeader({ name, code, tag, nipnas, onBack }) {
       {
         id: 'h2',
         timestamp: '2025-11-12T14:10:00.000Z',
-        userName: 'Admin Dua',
+        userName: 'Top-Level Manager Dua',
         userRole: 'Data Steward',
         changes: [
           {

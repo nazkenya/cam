@@ -9,9 +9,11 @@ import { Badge } from '@components/ui/Badge'
 import YesNoToggle from '@components/ui/YesNoToggle'
 import { FiTrash2 } from 'react-icons/fi'
 import { useAuth } from '@auth/AuthContext'
-import { ROLES } from '@auth/roles'
+import { ROLES, ROLE_LABELS } from '@auth/roles'
 
 const INIT_STATUS = ['DIRENCANAKAN', 'SEDANG BERJALAN', 'BELUM MULAI', 'SELESAI']
+const MANAGER_LABEL = ROLE_LABELS[ROLES.manager] || 'Manager'
+const ACCOUNT_MANAGER_LABEL = ROLE_LABELS[ROLES.sales] || 'Account Manager'
 
 export default function SalesPlanDetail() {
   const { id: customerId, planId } = useParams()
@@ -221,10 +223,10 @@ export default function SalesPlanDetail() {
             )}
           </div>
 
-          {/* Catatan Manager */}
+          {/* Catatan Manager Business Service */}
           {plan.managerComment && (
             <p className="text-xs text-neutral-500 mt-1">
-              <span className="font-semibold">Catatan Manager:</span> {plan.managerComment}
+              <span className="font-semibold">Catatan {MANAGER_LABEL}:</span> {plan.managerComment}
             </p>
           )}
         </div>
@@ -256,9 +258,9 @@ export default function SalesPlanDetail() {
         <Card className="border border-neutral-200 bg-neutral-50 text-sm text-neutral-700">
           {isManager && (
             <p>
-              Anda masuk sebagai <span className="font-semibold">Manager</span>.
+              Anda masuk sebagai <span className="font-semibold">{MANAGER_LABEL}</span>.
               Halaman ini hanya dapat dilihat (read-only). Penambahan dan perubahan
-              inisiatif dilakukan oleh <span className="font-semibold">Sales</span>
+              inisiatif dilakukan oleh <span className="font-semibold">{ACCOUNT_MANAGER_LABEL}</span>
               setelah sales plan disetujui.
             </p>
           )}
@@ -269,7 +271,7 @@ export default function SalesPlanDetail() {
                 {plan.approvalStatus || 'Pending'}
               </span>
               . Inisiatif baru dapat dibuat setelah sales plan{' '}
-              <span className="font-semibold">Approved</span> oleh Manager.
+              <span className="font-semibold">Approved</span> oleh {MANAGER_LABEL}.
             </p>
           )}
           {!isSales && !isManager && (

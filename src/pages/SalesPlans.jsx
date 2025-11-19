@@ -8,6 +8,9 @@ import SearchInput from '@components/ui/SearchInput'
 import Select from '@components/ui/Select'
 import { FaFilter, FaListUl } from 'react-icons/fa'
 import { FiPaperclip } from 'react-icons/fi'
+import { ROLES, ROLE_LABELS } from '@auth/roles'
+
+const MANAGER_LABEL = ROLE_LABELS[ROLES.manager] || 'Manager Business Service'
 
 // ---------- Dummy Data (hardcoded) ----------
 const MOCK_SALES_PLANS = [
@@ -137,7 +140,7 @@ export default function SalesMySalesPlans() {
       {/* Header */}
       <PageHeader
         variant="hero"
-        title="Sales Plan Saya"
+        title="Sales Plan"
         subtitle="Lihat seluruh sales plan yang Anda miliki lintas pelanggan."
       />
 
@@ -161,7 +164,7 @@ export default function SalesMySalesPlans() {
           <SearchInput
             value={search}
             onChange={setSearch}
-            placeholder="Cari plan / customer / AM"
+            placeholder="Cari plan / customer"
             className="w-full md:w-64"
           />
           <Select
@@ -267,10 +270,10 @@ export default function SalesMySalesPlans() {
                     )}
                   </div>
 
-                  {/* Catatan Manager */}
+                  {/* Catatan Manager Business Service */}
                   <div className="space-y-1.5">
                     <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-                      Catatan Manager
+                      Catatan {MANAGER_LABEL}
                     </p>
                     {plan.managerComment ? (
                       <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-700">
@@ -278,7 +281,7 @@ export default function SalesMySalesPlans() {
                       </div>
                     ) : (
                       <p className="text-xs text-neutral-400 italic">
-                        Belum ada catatan. Menunggu feedback dari Manager.
+                        Belum ada catatan. Menunggu feedback dari {MANAGER_LABEL}.
                       </p>
                     )}
                   </div>

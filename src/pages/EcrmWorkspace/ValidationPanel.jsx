@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { runValidateAM, generateCommit, fetchATM, fetchCA, diffCAtoATM } from '../../services/validation'
+import { ROLES } from '../../auth/roles'
 import PageHeader from '../../components/ui/PageHeader'
 import Button from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
@@ -81,10 +82,10 @@ export default function ValidationPanel() {
     // Compare CA against ATM and save only missing rows into TEMP
     setState('validating')
     try {
-  const res = await runValidateAM('manager')
-  const missingOnly = (res.temp || []).filter((t) => t.status === 'tidak valid' && t.sumber === 'CA')
+      const res = await runValidateAM(ROLES.manager)
+      const missingOnly = (res.temp || []).filter((t) => t.status === 'tidak valid' && t.sumber === 'CA')
       setTemp(missingOnly)
-  setSelectedTemp(new Set())
+      setSelectedTemp(new Set())
       setLog((l) => [res.log, ...l])
       setState('success')
       setActiveTab('TEMP')
@@ -119,10 +120,10 @@ export default function ValidationPanel() {
           return { nik_am, id_sales, nama_am, region, witel, updated_at }
         })])
       }
-      const entry = await generateCommit('manager')
-  setLog((l) => [entry, ...l])
-  setTemp([])
-  setSelectedTemp(new Set())
+      const entry = await generateCommit(ROLES.manager)
+      setLog((l) => [entry, ...l])
+      setTemp([])
+      setSelectedTemp(new Set())
       setActiveTab('ATM')
       setState('success')
     } catch {
