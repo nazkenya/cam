@@ -15,6 +15,8 @@ export default function ActivitiesPage() {
   const [selectedActivity, setSelectedActivity] = useState(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all') // all | perluUpdate | upcoming | completed
+
   const [activities, setActivities] = useState([
     {
       id: 1,
@@ -52,6 +54,15 @@ export default function ActivitiesPage() {
     },
   ])
 
+  // --- Helper untuk parsing tanggal aktivitas ---
+  const parseActivityDate = (activity) => {
+    if (!activity?.date) return null
+    const dateString = activity.time ? `${activity.date}T${activity.time}` : activity.date
+    const d = new Date(dateString)
+    if (Number.isNaN(d.getTime())) return null
+    return d
+  }
+
   const filteredActivities = useMemo(() => {
     if (!searchQuery) return activities
     const q = searchQuery.toLowerCase()
@@ -64,25 +75,32 @@ export default function ActivitiesPage() {
     )
   }, [activities, searchQuery])
 
+  // Hitung notifikasi (perlu update & upcoming) berdasarkan computed status
   const notificationStats = useMemo(() => {
     const now = new Date()
+
     return filteredActivities.reduce(
       (acc, activity) => {
-        if (activity.status?.toLowerCase() === 'completed') {
-          return acc
-        }
+        const baseStatus = activity.status?.toLowerCase()
+        const activityDate = parseActivityDate(activity)
 
-        const dateString = activity.time ? `${activity.date}T${activity.time}` : activity.date
-        const activityDate = new Date(dateString)
-        if (Number.isNaN(activityDate.getTime())) {
-          return acc
-        }
+        let computedStatus = baseStatus
 
-        if (activityDate < now) {
-          acc.perluUpdate += 1
+        if (baseStatus === 'completed') {
+          computedStatus = 'completed'
         } else {
-          acc.upcoming += 1
+          // Kalau belum completed → cek tanggal
+          if (!activityDate) {
+            computedStatus = 'upcoming'
+          } else if (activityDate < now) {
+            computedStatus = 'perluUpdate'
+          } else {
+            computedStatus = 'upcoming'
+          }
         }
+
+        if (computedStatus === 'perluUpdate') acc.perluUpdate += 1
+        if (computedStatus === 'upcoming') acc.upcoming += 1
 
         return acc
       },
@@ -91,6 +109,44 @@ export default function ActivitiesPage() {
   }, [filteredActivities])
 
   const hasNotifications = notificationStats.perluUpdate > 0 || notificationStats.upcoming > 0
+
+  // List view: satu list panjang, dengan computedStatus + filter status
+  const listActivities = useMemo(() => {
+    const now = new Date()
+
+    const withComputedStatus = filteredActivities.map((activity) => {
+      const baseStatus = activity.status?.toLowerCase()
+      const activityDate = parseActivityDate(activity)
+
+      let computedStatus = baseStatus
+
+      if (baseStatus === 'completed') {
+        computedStatus = 'completed'
+      } else {
+        if (!activityDate) {
+          computedStatus = 'upcoming'
+        } else if (activityDate < now) {
+          computedStatus = 'perluUpdate'
+        } else {
+          computedStatus = 'upcoming'
+        }
+      }
+
+      return { ...activity, computedStatus }
+    })
+
+    const filteredByStatus =
+      statusFilter === 'all'
+        ? withComputedStatus
+        : withComputedStatus.filter((a) => a.computedStatus === statusFilter)
+
+    return filteredByStatus.sort((a, b) => {
+      const da = parseActivityDate(a)
+      const db = parseActivityDate(b)
+      if (!da || !db) return 0
+      return da - db
+    })
+  }, [filteredActivities, statusFilter])
 
   const handleCreateActivity = (newActivity) => {
     const activity = {
@@ -101,18 +157,18 @@ export default function ActivitiesPage() {
       proof: null,
       mom: null,
     }
-    setActivities([...activities, activity])
+    setActivities((prev) => [...prev, activity])
     setShowFormModal(false)
   }
 
   const handleUpdateActivity = (updatedActivity) => {
-    setActivities(activities.map((a) => (a.id === updatedActivity.id ? updatedActivity : a)))
+    setActivities((prev) => prev.map((a) => (a.id === updatedActivity.id ? updatedActivity : a)))
     setSelectedActivity(null)
     setShowDetailModal(false)
   }
 
   const handleDeleteActivity = (id) => {
-    setActivities(activities.filter((a) => a.id !== id))
+    setActivities((prev) => prev.filter((a) => a.id !== id))
     setSelectedActivity(null)
     setShowDetailModal(false)
   }
@@ -120,6 +176,27 @@ export default function ActivitiesPage() {
   const handleViewActivity = (activity) => {
     setSelectedActivity(activity)
     setShowDetailModal(true)
+  }
+
+  const renderStatusFilterChip = (value, label) => (
+    <button
+      key={value}
+      onClick={() => setStatusFilter(value)}
+      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+        statusFilter === value
+          ? 'bg-[#E60012] text-white border-[#E60012]'
+          : 'bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-50'
+      }`}
+    >
+      {label}
+    </button>
+  )
+
+  const getBorderClass = (computedStatus) => {
+    if (computedStatus === 'perluUpdate') return 'border-l-4 border-[#E60012]'
+    if (computedStatus === 'upcoming') return 'border-l-4 border-[#EA580C]'
+    if (computedStatus === 'completed') return 'border-l-4 border-emerald-500'
+    return 'border-l border-neutral-200'
   }
 
   return (
@@ -158,21 +235,23 @@ export default function ActivitiesPage() {
       )}
 
       <Card className="bg-white">
-        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-          <div className="flex-1 flex flex-col md:flex-row gap-3 md:gap-4 w-full md:w-auto">
-            <SearchInput
-              value={searchQuery}
-              onChange={setSearchQuery}
-              placeholder="Cari aktivitas, topik, atau customer..."
-            />
-            <Button variant="secondary" className="w-fit inline-flex items-center gap-2">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex-1 flex flex-col gap-3 md:flex-row">
+            <div className="w-full max-w-md">
+              <SearchInput
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="Cari aktivitas, topik, atau customer..."
+              />
+            </div>
+            <Button variant="secondary" className="inline-flex items-center gap-2 justify-center">
               <FaFilter />
               Filter
             </Button>
           </div>
 
-          <div className="flex gap-3 w-full md:w-auto">
-            <div className="flex gap-2 border border-neutral-200 rounded-lg p-1">
+          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+            <div className="flex gap-2 border border-neutral-200 rounded-lg p-1 justify-between sm:justify-start">
               <button
                 onClick={() => setView('calendar')}
                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -191,16 +270,17 @@ export default function ActivitiesPage() {
                     ? 'bg-[#E60012] text-white'
                     : 'text-neutral-600 hover:bg-neutral-100'
                 }`}
-              >
-                <FaList className="inline mr-2" />
-                List
-              </button>
-            </div>
+                >
+                  <FaList className="inline mr-2" />
+                  List
+                </button>
+              </div>
 
             <Button
               variant="primary"
               onClick={() => setShowFormModal(true)}
-              className="inline-flex items-center gap-2"
+              size="md"
+              className="inline-flex items-center gap-2 whitespace-nowrap flex-shrink-0 justify-center w-full sm:w-auto"
             >
               <FaPlus />
               Tambah Aktivitas
@@ -213,18 +293,54 @@ export default function ActivitiesPage() {
         <ActivityCalendar activities={filteredActivities} onActivityClick={handleViewActivity} />
       ) : (
         <div className="space-y-4">
-          {filteredActivities.length === 0 ? (
+          {/* Toolbar khusus List: filter status + legend */}
+          <div className="flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
+            <div className="flex flex-wrap gap-2">
+              {renderStatusFilterChip('all', 'Semua')}
+              {renderStatusFilterChip('perluUpdate', 'Perlu Update')}
+              {renderStatusFilterChip('upcoming', 'Akan Datang')}
+              {renderStatusFilterChip('completed', 'Selesai')}
+            </div>
+            <div className="flex flex-wrap gap-3 text-[11px] text-neutral-500">
+              <span className="flex items-center gap-1">
+                <span className="w-3 h-3 rounded-full bg-[#E60012]" />
+                Perlu Update
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-3 h-3 rounded-full bg-[#EA580C]" />
+                Akan Datang
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-3 h-3 rounded-full bg-emerald-500" />
+                Selesai
+              </span>
+            </div>
+          </div>
+
+          {listActivities.length === 0 ? (
             <Card className="bg-white text-center py-12">
               <p className="text-neutral-500">Tidak ada aktivitas ditemukan</p>
             </Card>
           ) : (
-            filteredActivities.map((activity) => (
-              <ActivityCard
-                key={activity.id}
-                activity={activity}
-                onClick={() => handleViewActivity(activity)}
-              />
-            ))
+            <div className="space-y-3">
+              {listActivities.map((activity) => {
+                const borderClass = getBorderClass(activity.computedStatus)
+                // Override status yang dikirim ke card supaya badge/status di dalam card ikut sesuai
+                const activityForCard = {
+                  ...activity,
+                  status: activity.computedStatus,
+                }
+
+                return (
+                  <div key={activity.id} className={`${borderClass} pl-3`}>
+                    <ActivityCard
+                      activity={activityForCard}
+                      onClick={() => handleViewActivity(activityForCard)}
+                    />
+                  </div>
+                )
+              })}
+            </div>
           )}
         </div>
       )}

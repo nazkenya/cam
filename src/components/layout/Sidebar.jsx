@@ -164,11 +164,11 @@ export default function Sidebar() {
         <div className="px-3 space-y-1">
           <button type="button" className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm hover:bg-white/5 text-white/75 hover:text-white">
             <FaQuestionCircle className="w-5 h-5" />
-            <span>Help and Support</span>
+            <span>Bantuan</span>
           </button>
           <button type="button" className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm hover:bg-white/5 text-white/75 hover:text-white">
             <FaCog className="w-5 h-5" />
-            <span>Settings</span>
+            <span>Pengaturan</span>
           </button>
           <button type="button" onClick={logout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm hover:bg-white/5 text-white/75 hover:text-white">
             <FaSignOutAlt className="w-5 h-5" />

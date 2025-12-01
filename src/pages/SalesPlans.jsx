@@ -6,8 +6,10 @@ import PageHeader from '@components/ui/PageHeader'
 import Card from '@components/ui/Card'
 import SearchInput from '@components/ui/SearchInput'
 import Select from '@components/ui/Select'
-import { FaFilter, FaListUl } from 'react-icons/fa'
-import { FiPaperclip } from 'react-icons/fi'
+import Button from '@components/ui/Button'
+import Modal from '@components/ui/Modal'
+import FormInput from '@components/ui/FormInput'
+import { FiPaperclip, FiPlus } from 'react-icons/fi'
 import { ROLES, ROLE_LABELS } from '@auth/roles'
 
 const MANAGER_LABEL = ROLE_LABELS[ROLES.manager] || 'Manager Business Service'
@@ -113,15 +115,97 @@ const approvalTone = (status) => {
   return 'bg-amber-50 text-amber-700 border border-amber-200'
 }
 
+const STATUS_OPTIONS = ['Draft', 'Active', 'Closed']
+const ACCOUNT_MANAGER_LABEL = ROLE_LABELS[ROLES.sales] || 'Account Manager'
+
+const createInitialForm = () => ({
+  title: '',
+  customerName: '',
+  dateStart: '',
+  dateEnd: '',
+  status: 'Draft',
+  description: '',
+  fileName: '',
+  fileData: '',
+})
+
+const slugify = (value = '') =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '') || `customer-${Date.now()}`
+
 export default function SalesMySalesPlans() {
   const navigate = useNavigate()
+  const [plans, setPlans] = useState(() => [...MOCK_SALES_PLANS])
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const [form, setForm] = useState(createInitialForm)
+  const [errors, setErrors] = useState({})
+
+  const resetForm = () => {
+    setForm(createInitialForm())
+    setErrors({})
+  }
+
+  const validate = () => {
+    const nextErrors = {}
+    if (!form.title.trim()) nextErrors.title = true
+    if (!form.customerName.trim()) nextErrors.customerName = true
+    if (!form.dateStart) nextErrors.dateStart = true
+    if (!form.dateEnd) nextErrors.dateEnd = true
+    if (form.dateStart && form.dateEnd && form.dateEnd < form.dateStart) nextErrors.dateEnd = true
+    setErrors(nextErrors)
+    return Object.keys(nextErrors).length === 0
+  }
+
+  const handleFileChange = (event) => {
+    const file = event.target.files?.[0]
+    if (!file) {
+      setForm((prev) => ({ ...prev, fileName: '', fileData: '' }))
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => {
+      setForm((prev) => ({ ...prev, fileName: file.name, fileData: reader.result }))
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleCreatePlan = () => {
+    if (!validate()) return
+    const customerName = form.customerName.trim()
+    const newPlan = {
+      id: `sp-${Date.now()}`,
+      title: form.title.trim(),
+      customerId: slugify(customerName),
+      customerName,
+      ownerName: ACCOUNT_MANAGER_LABEL,
+      status: form.status,
+      approvalStatus: 'Pending',
+      dateStart: form.dateStart,
+      dateEnd: form.dateEnd,
+      description: form.description,
+      attachment: form.fileName
+        ? {
+            fileName: form.fileName,
+            url: form.fileData,
+          }
+        : null,
+      managerComment: '',
+      managerDecisionDate: null,
+    }
+    setPlans((prev) => [newPlan, ...prev])
+    setIsCreateOpen(false)
+    resetForm()
+  }
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
 
-    return MOCK_SALES_PLANS.filter((plan) => {
+    return plans.filter((plan) => {
       const matchesSearch =
         !q ||
         plan.title?.toLowerCase().includes(q) ||
@@ -133,7 +217,7 @@ export default function SalesMySalesPlans() {
 
       return matchesSearch && matchesStatus
     })
-  }, [search, statusFilter])
+  }, [plans, search, statusFilter])
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -145,38 +229,38 @@ export default function SalesMySalesPlans() {
       />
 
       {/* Filter bar */}
-      <Card className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-2">
-          <div className="inline-flex items-center justify-center h-9 w-9 rounded-xl bg-[#E0EDFF] text-[#1D4ED8]">
-            <FaFilter className="w-4 h-4" />
+      <Card className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex-1 flex flex-col gap-3 md:flex-row">
+          <div className="w-full max-w-md">
+            <SearchInput
+              value={search}
+              onChange={setSearch}
+              placeholder="Cari plan, pelanggan, atau AM"
+            />
           </div>
-          <div>
-            <p className="text-sm font-medium text-neutral-800">
-              Filter Sales Plan
-            </p>
-            <p className="text-xs text-neutral-500">
-              Cari berdasarkan judul, pelanggan, atau nama Account Manager.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-2 w-full md:w-auto md:flex-row md:items-center">
-          <SearchInput
-            value={search}
-            onChange={setSearch}
-            placeholder="Cari plan / customer"
-            className="w-full md:w-64"
-          />
           <Select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             className="w-full md:w-52"
           >
             <option value="all">Semua Status Plan</option>
-            <option value="Draft">Draft</option>
-            <option value="Active">Active</option>
-            <option value="Closed">Closed</option>
+            {STATUS_OPTIONS.map((status) => (
+              <option key={status} value={status}>{status}</option>
+            ))}
           </Select>
+        </div>
+
+        <div className="w-full md:w-auto">
+          <Button
+            variant="primary"
+            className="w-full inline-flex items-center justify-center gap-2"
+            onClick={() => {
+              resetForm()
+              setIsCreateOpen(true)
+            }}
+          >
+            <FiPlus /> Sales Plan Baru
+          </Button>
         </div>
       </Card>
 
@@ -292,15 +376,126 @@ export default function SalesMySalesPlans() {
                   <span className="text-[11px] text-neutral-500">
                     {decisionDateText}
                   </span>
-                  <span className="text-[11px] text-neutral-400">
-                    Klik card ini untuk melihat detail lengkap sales plan.
-                  </span>
                 </div>
               </Card>
             )
           })}
         </div>
       )}
+
+      <Modal
+        open={isCreateOpen}
+        onClose={() => {
+          setIsCreateOpen(false)
+          resetForm()
+        }}
+        title="Create Sales Plan"
+        panelClassName="max-w-lg"
+        footer={
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              variant="back"
+              onClick={() => {
+                setIsCreateOpen(false)
+                resetForm()
+              }}
+            >
+              Batal
+            </Button>
+            <Button onClick={handleCreatePlan}>Create</Button>
+          </div>
+        }
+      >
+        <div className="space-y-3">
+          <div>
+            <div className="text-[11px] font-semibold uppercase text-neutral-600 mb-1">
+              Judul Plan<span className="text-rose-500">*</span>
+            </div>
+            <FormInput
+              value={form.title}
+              onChange={(value) => setForm((prev) => ({ ...prev, title: value }))}
+              error={!!errors.title}
+              placeholder="Contoh: Q4 2025 Digitalization Push"
+            />
+          </div>
+
+          <div>
+            <div className="text-[11px] font-semibold uppercase text-neutral-600 mb-1">
+              Pelanggan<span className="text-rose-500">*</span>
+            </div>
+            <FormInput
+              value={form.customerName}
+              onChange={(value) => setForm((prev) => ({ ...prev, customerName: value }))}
+              error={!!errors.customerName}
+              placeholder="Nama pelanggan terkait sales plan ini"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <div className="text-[11px] font-semibold uppercase text-neutral-600 mb-1">
+                Tanggal Mulai<span className="text-rose-500">*</span>
+              </div>
+              <FormInput
+                type="date"
+                value={form.dateStart}
+                onChange={(value) => setForm((prev) => ({ ...prev, dateStart: value }))}
+                error={!!errors.dateStart}
+              />
+            </div>
+
+            <div>
+              <div className="text-[11px] font-semibold uppercase text-neutral-600 mb-1">
+                Tanggal Selesai<span className="text-rose-500">*</span>
+              </div>
+              <FormInput
+                type="date"
+                value={form.dateEnd}
+                onChange={(value) => setForm((prev) => ({ ...prev, dateEnd: value }))}
+                error={!!errors.dateEnd}
+              />
+            </div>
+          </div>
+
+          <div>
+            <div className="text-[11px] font-semibold uppercase text-neutral-600 mb-1">
+              Status
+            </div>
+            <FormInput
+              type="select"
+              value={form.status}
+              onChange={(value) => setForm((prev) => ({ ...prev, status: value || 'Draft' }))}
+              options={STATUS_OPTIONS}
+            />
+          </div>
+
+          <div>
+            <div className="text-[11px] font-semibold uppercase text-neutral-600 mb-1">
+              Deskripsi
+            </div>
+            <FormInput
+              type="textarea"
+              value={form.description}
+              onChange={(value) => setForm((prev) => ({ ...prev, description: value }))}
+              placeholder="Ringkasan plan, objective, scope, dll."
+            />
+          </div>
+
+          <div>
+            <div className="text-[11px] font-semibold uppercase text-neutral-600 mb-1">
+              Lampiran Sales Plan
+            </div>
+            <input
+              type="file"
+              onChange={handleFileChange}
+              className="w-full text-sm text-neutral-600 border border-dashed border-neutral-300 rounded-xl px-3 py-2"
+            />
+            {form.fileName && (
+              <p className="text-xs text-neutral-500 mt-1">File terpilih: {form.fileName}</p>
+            )}
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

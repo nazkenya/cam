@@ -13,6 +13,7 @@ import {
   FaImage,
   FaCheckCircle,
   FaTrash,
+  FaExclamationTriangle,
 } from 'react-icons/fa'
 
 export default function ActivityDetailModal({ open, onClose, activity, onUpdate, onDelete }) {
@@ -22,9 +23,24 @@ export default function ActivityDetailModal({ open, onClose, activity, onUpdate,
   const momInputRef = useRef(null)
 
   const activityDateTime = new Date(`${activity.date}T${activity.time}`)
-  const isPast = activityDateTime < new Date()
+  const now = new Date()
+  
+  // Cek apakah aktivitas sudah lewat
+  const isPast = activityDateTime < now
+  
+  // Cek apakah status completed
   const isCompleted = activity.status === 'completed'
-  const canAddProofAndMom = isPast && activity.withCustomer
+
+  // Hitung selisih hari untuk batasan edit 7 hari
+  const diffTime = Math.abs(now - activityDateTime)
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  const isWithin7Days = diffDays <= 7
+
+  // User bisa edit jika: Aktivitas sudah lewat, memerlukan bukti (withCustomer), dan masih dalam periode 7 hari
+  const canEditDocs = isPast && activity.withCustomer && isWithin7Days
+
+  // Section dokumentasi muncul jika: Aktivitas sudah lewat & withCustomer
+  const showDocSection = isPast && activity.withCustomer
 
   const handleFileRead = (file) => {
     return new Promise((resolve) => {
@@ -81,6 +97,73 @@ export default function ActivityDetailModal({ open, onClose, activity, onUpdate,
     }
   }
 
+  // Helper untuk merender kotak file (agar kodenya rapi)
+  const renderFileBox = (title, fileData, inputRef, onFileChange, acceptType, icon) => {
+    const Icon = icon
+    return (
+      <div className="space-y-3 rounded-xl border border-neutral-200 bg-neutral-50 p-4">
+        <div className="flex items-center gap-2 text-sm font-semibold text-neutral-800">
+          <Icon className="text-neutral-400" />
+          {title}
+        </div>
+        
+        {/* Hidden Input */}
+        <input
+          ref={inputRef}
+          type="file"
+          accept={acceptType}
+          className="hidden"
+          onChange={onFileChange}
+          disabled={!canEditDocs}
+        />
+
+        {!fileData ? (
+          // KONDISI 1: Belum ada file
+          canEditDocs ? (
+            <Button
+              variant="secondary"
+              onClick={() => inputRef.current?.click()}
+              className="inline-flex items-center gap-2 w-full justify-center border-dashed"
+            >
+              <Icon />
+              Upload {title}
+            </Button>
+          ) : (
+            <div className="text-xs text-neutral-400 italic p-2 text-center border border-neutral-200 rounded bg-neutral-100">
+              Tidak ada file (Batas waktu upload habis)
+            </div>
+          )
+        ) : (
+          // KONDISI 2: Sudah ada file (Tampilkan Preview)
+          <div className="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white p-3">
+            {fileData.type?.startsWith('image/') ? (
+              <img src={fileData.dataUrl} alt="Proof" className="h-16 w-16 rounded-lg object-cover" />
+            ) : (
+              <FaFileAlt className="h-10 w-10 text-neutral-400" />
+            )}
+            
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-neutral-800 truncate">{fileData.name}</p>
+              <p className="text-xs text-neutral-500">{(fileData.size / 1024).toFixed(2)} KB</p>
+            </div>
+
+            {/* Tombol Edit hanya muncul jika masih dalam 7 hari */}
+            {canEditDocs && (
+              <div className="flex flex-col gap-2">
+                <Button variant="secondary" size="sm" onClick={() => inputRef.current?.click()}>
+                  Ganti
+                </Button>
+                <Button variant="danger" size="sm" onClick={() => title.includes('Bukti') ? setProof(null) : setMom(null)}>
+                  Hapus
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <Modal
       open={open}
@@ -97,16 +180,20 @@ export default function ActivityDetailModal({ open, onClose, activity, onUpdate,
             <Button variant="secondary" onClick={onClose}>
               Tutup
             </Button>
-            {canAddProofAndMom && !isCompleted && (
+            
+            {/* Tombol Simpan: Muncul jika bisa edit dokumen DAN (belum complete ATAU ada perubahan data) */}
+            {canEditDocs && (
               <Button
                 variant="primary"
                 onClick={handleSaveProofAndMom}
-                disabled={!proof && !mom}
+                disabled={!proof && !mom} // Minimal salah satu harus ada untuk save pertama kali
               >
-                Simpan & Tandai Selesai
+                {isCompleted ? 'Simpan Perubahan' : 'Simpan & Tandai Selesai'}
               </Button>
             )}
-            {!isCompleted && !canAddProofAndMom && (
+
+            {/* Tombol Tandai Selesai Manual (jika tidak butuh dokumen) */}
+            {!isCompleted && !activity.withCustomer && (
               <Button variant="primary" onClick={handleMarkComplete}>
                 <FaCheckCircle className="inline mr-2" />
                 Tandai Selesai
@@ -117,6 +204,7 @@ export default function ActivityDetailModal({ open, onClose, activity, onUpdate,
       }
     >
       <div className="space-y-5 text-sm text-neutral-700">
+        {/* Header Info */}
         <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm space-y-3">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -136,6 +224,7 @@ export default function ActivityDetailModal({ open, onClose, activity, onUpdate,
           </div>
         </section>
 
+        {/* Rangkuman Jadwal */}
         <section className="rounded-2xl border border-neutral-100 bg-neutral-50/70 p-5 shadow-inner space-y-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Rangkuman Jadwal</p>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -145,10 +234,7 @@ export default function ActivityDetailModal({ open, onClose, activity, onUpdate,
                 <p className="text-xs uppercase text-neutral-500">Tanggal</p>
                 <p className="font-medium text-neutral-900">
                   {new Date(activity.date).toLocaleDateString('id-ID', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
+                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
                   })}
                 </p>
               </div>
@@ -167,28 +253,12 @@ export default function ActivityDetailModal({ open, onClose, activity, onUpdate,
                 <p className="font-medium text-neutral-900">{activity.location}</p>
               </div>
             </div>
-            <div className="rounded-xl border border-white/60 bg-white p-4 flex gap-3">
-              <FaTag className="w-5 h-5 text-neutral-400" />
-              <div>
-                <p className="text-xs uppercase text-neutral-500">Tipe Aktivitas</p>
-                <p className="font-medium text-neutral-900">{activity.type}</p>
-              </div>
-            </div>
             {activity.withCustomer && activity.customer && (
               <div className="rounded-xl border border-white/60 bg-white p-4 flex gap-3 sm:col-span-2">
                 <FaBuilding className="w-5 h-5 text-neutral-400" />
                 <div>
                   <p className="text-xs uppercase text-neutral-500">Customer</p>
                   <p className="font-medium text-[#E60012]">{activity.customer}</p>
-                </div>
-              </div>
-            )}
-            {activity.invitees && activity.invitees.length > 0 && (
-              <div className="rounded-xl border border-white/60 bg-white p-4 flex gap-3 sm:col-span-2">
-                <FaUsers className="w-5 h-5 text-neutral-400" />
-                <div>
-                  <p className="text-xs uppercase text-neutral-500">Peserta</p>
-                  <p className="font-medium text-neutral-900">{activity.invitees.join(', ')}</p>
                 </div>
               </div>
             )}
@@ -202,135 +272,36 @@ export default function ActivityDetailModal({ open, onClose, activity, onUpdate,
           </section>
         )}
 
-        {canAddProofAndMom && (
+        {/* SECTION DOKUMENTASI (Menyatukan Upload & View) */}
+        {showDocSection && (
           <section className="rounded-2xl border border-dashed border-neutral-300 bg-white p-5 shadow-sm space-y-4">
-            <div>
-              <p className="text-sm font-semibold text-neutral-800">Lengkapi Dokumentasi</p>
-              <p className="text-xs text-neutral-500 mt-1">
-                Aktivitas ini membutuhkan bukti dan MoM untuk menandai status selesai.
-              </p>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-3 rounded-xl border border-neutral-200 bg-neutral-50 p-4">
-                <div className="flex items-center gap-2 text-sm font-semibold text-neutral-800">
-                  <FaImage className="text-neutral-400" />
-                  Foto Bukti (JPG, PNG)
-                </div>
-                <input
-                  ref={proofInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleProofChange}
-                />
-                {!proof ? (
-                  <Button
-                    variant="secondary"
-                    onClick={() => proofInputRef.current?.click()}
-                    className="inline-flex items-center gap-2"
-                  >
-                    <FaImage />
-                    Pilih Foto
-                  </Button>
-                ) : (
-                  <div className="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white p-3">
-                    {proof.type?.startsWith('image/') && (
-                      <img src={proof.dataUrl} alt="Proof" className="h-20 w-20 rounded-lg object-cover" />
-                    )}
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-neutral-800">{proof.name}</p>
-                      <p className="text-xs text-neutral-500">{(proof.size / 1024).toFixed(2)} KB</p>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <Button variant="secondary" size="sm" onClick={() => proofInputRef.current?.click()}>
-                        Ganti
-                      </Button>
-                      <Button variant="danger" size="sm" onClick={() => setProof(null)}>
-                        Hapus
-                      </Button>
-                    </div>
-                  </div>
-                )}
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm font-semibold text-neutral-800">
+                  {!proof && !mom ? "Lengkapi Dokumentasi" : "Dokumentasi Aktivitas"}
+                </p>
+                <p className="text-xs text-neutral-500 mt-1">
+                  {canEditDocs 
+                    ? "Anda dapat mengunggah atau mengubah bukti & MoM hingga 7 hari setelah aktivitas."
+                    : "Batas waktu pengunggahan (7 hari) telah berakhir. File bersifat read-only."}
+                </p>
               </div>
-
-              <div className="space-y-3 rounded-xl border border-neutral-200 bg-neutral-50 p-4">
-                <div className="flex items-center gap-2 text-sm font-semibold text-neutral-800">
-                  <FaFileAlt className="text-neutral-400" />
-                  Minutes of Meeting (PDF, DOC, DOCX)
-                </div>
-                <input
-                  ref={momInputRef}
-                  type="file"
-                  accept=".pdf,.doc,.docx"
-                  className="hidden"
-                  onChange={handleMomChange}
-                />
-                {!mom ? (
-                  <Button
-                    variant="secondary"
-                    onClick={() => momInputRef.current?.click()}
-                    className="inline-flex items-center gap-2"
-                  >
-                    <FaFileAlt />
-                    Pilih File MoM
-                  </Button>
-                ) : (
-                  <div className="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white p-3">
-                    <FaFileAlt className="h-10 w-10 text-neutral-400" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-neutral-800">{mom.name}</p>
-                      <p className="text-xs text-neutral-500">{(mom.size / 1024).toFixed(2)} KB</p>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <Button variant="secondary" size="sm" onClick={() => momInputRef.current?.click()}>
-                        Ganti
-                      </Button>
-                      <Button variant="danger" size="sm" onClick={() => setMom(null)}>
-                        Hapus
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
+              {/* Badge info sisa hari */}
+              {canEditDocs && (
+                <Badge variant="warning" className="text-[10px]">
+                  Sisa waktu edit: {7 - diffDays} hari
+                </Badge>
+              )}
+              {!canEditDocs && (
+                <Badge variant="danger" className="text-[10px] flex items-center gap-1">
+                  <FaExclamationTriangle /> Terkunci
+                </Badge>
+              )}
             </div>
-          </section>
-        )}
 
-        {isCompleted && (activity.proof || activity.mom) && (
-          <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm space-y-4">
-            <div>
-              <p className="text-sm font-semibold text-neutral-800">Dokumentasi</p>
-              <p className="text-xs text-neutral-500 mt-1">File yang telah disimpan untuk aktivitas ini.</p>
-            </div>
             <div className="grid gap-4 md:grid-cols-2">
-              {activity.proof && (
-                <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 space-y-3">
-                  <p className="text-xs uppercase text-neutral-500">Foto Bukti</p>
-                  <div className="flex items-center gap-3">
-                    {activity.proof.type?.startsWith('image/') && (
-                      <img
-                        src={activity.proof.dataUrl}
-                        alt="Proof"
-                        className="h-20 w-20 rounded-lg object-cover"
-                      />
-                    )}
-                    <div>
-                      <p className="text-sm font-medium text-neutral-800">{activity.proof.name}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {activity.mom && (
-                <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 space-y-3">
-                  <p className="text-xs uppercase text-neutral-500">Minutes of Meeting</p>
-                  <div className="flex items-center gap-3">
-                    <FaFileAlt className="h-10 w-10 text-neutral-400" />
-                    <div>
-                      <p className="text-sm font-medium text-neutral-800">{activity.mom.name}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {renderFileBox("Foto Bukti", proof, proofInputRef, handleProofChange, "image/*", FaImage)}
+              {renderFileBox("MoM File", mom, momInputRef, handleMomChange, ".pdf,.doc,.docx", FaFileAlt)}
             </div>
           </section>
         )}

@@ -119,7 +119,7 @@ export default function CustomersPage() {
             </Button>
           </div>
 
-          <Button variant="primary" className="inline-flex items-center gap-2">
+          <Button variant="secondary" className="inline-flex items-center gap-2">
             <FaDownload /> Export
           </Button>
         </div>
