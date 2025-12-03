@@ -76,16 +76,16 @@ export default function CustomersPage() {
       render: (c) => <span className="text-neutral-700">{c.witel}</span>,
     },
 
-    { key: 'revenue', label: 'Revenue' },
-    { key: 'collection', label: 'Collection' },
-    { key: 'profitability', label: 'Profitability' },
+    // { key: 'revenue', label: 'Revenue' },
+    // { key: 'collection', label: 'Collection' },
+    // { key: 'profitability', label: 'Profitability' },
   ]
 
   // Stats
   const stats = [
     { label: 'Total Pelanggan', value: customersData.length.toLocaleString(), icon: FaUsers },
-    { label: 'Active Customers', value: '1,180', icon: FaChartLine },
-    { label: 'Total Revenue', value: 'Rp 45.2M', icon: FaDollarSign },
+    { label: 'Pelanggan Aktif', value: '5', icon: FaChartLine },
+    { label: 'Total Revenue', value: 'Rp 12.2B', icon: FaDollarSign },
   ]
 
   return (

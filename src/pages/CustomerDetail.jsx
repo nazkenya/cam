@@ -49,7 +49,7 @@ export default function CustomerDetail() {
             />
             <div className="p-4">
               {tab === 'sales' && (
-                <SalesPlan customerId={details.nipnas || base.code || id} customerName={base.name} />
+                <SalesPlan customerId={id || details.nipnas || base.code} customerName={base.name} />
               )}
               {tab === 'visiting' && <CustomerVisitingSection customerId={id} customerName={base.name} />}
               {tab === 'relationship' && (

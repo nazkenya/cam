@@ -37,7 +37,7 @@ export default function Dashboard() {
     <div className="space-y-6 animate-fade-in">
       <PageHeader
         variant="hero"
-        title="Selamat Datang di MyTEnS GoBeyond"
+        title="Selamat Datang di Key Account Management Dashboard"
         subtitle="Dashboard untuk mengelola pelanggan dan performa bisnis Anda"
       />
 

@@ -19,7 +19,7 @@ const MOCK_SALES_PLANS = [
   {
     id: 'sp-001',
     title: 'SP-Q4 Retention Enterprise',
-    customerId: 'c1',
+    customerId: 'samsung',
     customerName: 'Samsung Electronics Indonesia',
     ownerName: 'Budi Santoso',
     status: 'Draft',
@@ -97,6 +97,27 @@ const MOCK_SALES_PLANS = [
     managerComment:
       'Tolong revisi target revenue dan perjelas dependency dengan tim operasi sebelum diajukan ulang.',
     managerDecisionDate: '2025-09-10T11:20:00.000Z',
+  },
+  {
+    id: 'sp-005',
+    title: 'SP-Samsung Hybrid Cloud Expansion',
+    customerId: 'samsung',
+    customerName: 'Samsung Electronics Indonesia',
+    ownerName: 'Budi Santoso',
+    status: 'Active',
+    approvalStatus: 'Approved',
+    dateStart: '2025-03-01',
+    dateEnd: '2025-12-31',
+    description:
+      'Perluas footprint hybrid cloud untuk divisi mobile & consumer electronics; fokus workload ERP, data lake, dan observability.',
+    attachment: {
+      fileName: 'SP-Samsung-Hybrid-Cloud.pdf',
+      url: '/dummy/sp-samsung-hybrid-cloud.pdf',
+      size: '1.1 MB',
+    },
+    managerComment:
+      'Fokuskan quick win pada observability & security; siapkan showcase dashboard untuk CIO Samsung.',
+    managerDecisionDate: '2025-03-10T10:00:00.000Z',
   },
 ]
 

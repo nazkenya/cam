@@ -19,6 +19,47 @@ const statusClass = (s) =>
     ? 'bg-blue-50 text-blue-700 border-blue-200'
     : 'bg-neutral-100 text-neutral-700 border-neutral-200'
 
+// Hardcoded demo sales plans per customer
+const PRESEEDED_PLANS = {
+  samsung: [
+    {
+      id: 'sp-001',
+      title: 'SP-Q4 Retention Enterprise',
+      dateStart: '2025-10-01',
+      dateEnd: '2025-12-31',
+      status: 'Draft',
+      approvalStatus: 'Pending',
+      description:
+        'Fokus retaining top 10 key accounts dengan peningkatan cross-sell layanan managed service dan SD-WAN.',
+      fileName: 'SP-Q4-Retention-Samsung.pdf',
+      fileData: '',
+      customerId: 'samsung',
+      customerName: 'Samsung Electronics Indonesia',
+      ownerName: 'Budi Santoso',
+      managerComment: '',
+      managerDecisionDate: null,
+    },
+    {
+      id: 'sp-005',
+      title: 'SP-Samsung Hybrid Cloud Expansion',
+      dateStart: '2025-03-01',
+      dateEnd: '2025-12-31',
+      status: 'Active',
+      approvalStatus: 'Approved',
+      description:
+        'Perluas footprint hybrid cloud; fokus workload ERP, data lake, observability, dan keamanan.',
+      fileName: 'SP-Samsung-Hybrid-Cloud.pdf',
+      fileData: '',
+      customerId: 'samsung',
+      customerName: 'Samsung Electronics Indonesia',
+      ownerName: 'Budi Santoso',
+      managerComment:
+        'Fokuskan quick win pada observability & security; siapkan showcase dashboard untuk CIO Samsung.',
+      managerDecisionDate: '2025-03-10T10:00:00.000Z',
+    },
+  ],
+}
+
 export default function SalesPlan({ customerId = 'demo', customerName = '' }) {
   const navigate = useNavigate()
   const { user, role } = useAuth()
@@ -80,6 +121,14 @@ export default function SalesPlan({ customerId = 'demo', customerName = '' }) {
     setPlans(next)
     try { localStorage.setItem(storageKey, JSON.stringify(next)) } catch {}
   }, [storageKey])
+
+  // Seed mock plans for known customers if none exist
+  React.useEffect(() => {
+    if (plans.length > 0) return
+    const preset = PRESEEDED_PLANS[customerId]
+    if (!preset) return
+    savePlans(preset)
+  }, [plans.length, customerId, savePlans])
 
   const handleFileChange = React.useCallback((event) => {
     const file = event.target.files?.[0]

@@ -83,20 +83,6 @@ export default function ProfileHeader({ name, code, tag, nipnas, onBack }) {
               <div className="flex flex-wrap items-center gap-2 mt-1">
                 {tag && <Tag variant={tag.variant}>{tag.text}</Tag>}
 
-                <button
-                  type="button"
-                  onClick={() => navigate(`/customers/${id}/account-profile`)}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs bg-[#F0F6FF] text-[#2C5CC5] ring-1 ring-[#CFE0FF] hover:bg-[#E9F2FF]"
-                >
-                  <FaBookOpen className="w-3.5 h-3.5" />
-                  <span>Account Profile</span>
-                </button>
-
-                {code && (
-                  <span className="text-xs text-neutral-400">
-                    Kode Pelanggan: {code}
-                  </span>
-                )}
 
                 {nipnas && (
                   <span className="text-xs text-neutral-400">
