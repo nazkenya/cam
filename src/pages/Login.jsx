@@ -9,16 +9,20 @@ export default function Login() {
   const location = useLocation()
   const { login } = useAuth()
   const [username, setUsername] = useState('')
-  const [role, setRole] = useState(ALL_ROLES[0])
+
+  // Kalau mau default langsung ADMIN:
+  const [role, setRole] = useState(ROLES.admin)
+  // atau kalau mau tetap urutan pertama:
+  // const [role, setRole] = useState(ALL_ROLES[0])
 
   // Kalau user datang dari protected route, React Router biasanya kirim state.from
   const from = location.state?.from?.pathname
 
   // Map default homepage per role
   const DEFAULT_HOME_BY_ROLE = {
-    [ROLES.sales]: '/manager',
-    [ROLES.manager]: '/manager',
-    [ROLES.admin]: '/',
+    [ROLES.sales]: '/am',                 // atau '/customers' kalau mau
+    [ROLES.manager]: '/manager',          // sesuai route di atas
+    [ROLES.admin]: '/',                   // EXECUTIVE HOMEPAGE
   }
 
   async function handleSubmit(e) {
