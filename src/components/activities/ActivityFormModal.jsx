@@ -62,6 +62,33 @@ const findContactByName = (name) => {
   return match ? simplifyContact(match) : null
 }
 
+// Build a best-effort Outlook compose URL so the activity can be saved as a calendar event.
+const buildOutlookDeeplink = (activity) => {
+  if (!activity) return ''
+  const date = activity.date || ''
+  const time = activity.time || '09:00'
+  const [hh, mm] = time.split(':').map((t) => parseInt(t, 10))
+  const start = new Date(`${date || ''}T${Number.isInteger(hh) ? String(hh).padStart(2, '0') : '09'}:${Number.isInteger(mm) ? String(mm).padStart(2, '0') : '00'}:00`)
+  // Default 1 hour duration
+  const end = new Date(start.getTime() + 60 * 60 * 1000)
+
+  const params = new URLSearchParams({
+    path: '/calendar/action/compose',
+    rru: 'addevent',
+    subject: activity.title || 'Aktivitas Baru',
+    body: `${activity.topic ? `Topik: ${activity.topic}\n` : ''}${activity.description || 'Detail aktivitas'}\n\n(Simulated Outlook entry)`,
+    location: activity.location || '',
+    startdt: isNaN(start.getTime()) ? '' : start.toISOString(),
+    enddt: isNaN(end.getTime()) ? '' : end.toISOString(),
+  })
+
+  if (activity.invitees && activity.invitees.length > 0) {
+    params.append('attendees', activity.invitees.join(';'))
+  }
+
+  return `https://outlook.office.com/calendar/0/deeplink/compose?${params.toString()}`
+}
+
 const normalizeCustomerValue = (value) => {
   if (!value) return null
   if (typeof value === 'object' && value.name) {

@@ -219,6 +219,38 @@ export default function SalesMySalesPlans() {
     })
   }, [plans, search, statusFilter])
 
+  const persistPlanForCustomer = (plan) => {
+    if (!plan) return
+    const customerId = plan.customerId || slugify(plan.customerName)
+    const storageKey = `salesPlan_${customerId}`
+    const payload = {
+      ...plan,
+      // Hardcode Modernization plan to always be Approved in detail view
+      approvalStatus:
+        plan.id === 'sp-002' || (plan.title || '').includes('Modernization DC & Cloud')
+          ? 'Approved'
+          : plan.approvalStatus || 'Pending',
+      customerId,
+    }
+    try {
+      const raw = localStorage.getItem(storageKey)
+      const existing = raw ? JSON.parse(raw) : []
+      const merged = Array.isArray(existing)
+        ? [...existing.filter((p) => p.id !== payload.id), payload]
+        : [payload]
+      localStorage.setItem(storageKey, JSON.stringify(merged))
+    } catch {
+      // ignore storage errors
+    }
+  }
+
+  const openPlanDetail = (plan) => {
+    if (!plan) return
+    const customerId = plan.customerId || slugify(plan.customerName)
+    persistPlanForCustomer(plan)
+    navigate(`/customers/${customerId}/sales-plan/${plan.id}`)
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
@@ -284,9 +316,7 @@ export default function SalesMySalesPlans() {
               <Card
                 key={plan.id}
                 className="p-4 space-y-3 border border-neutral-200/80 hover:border-[#1D4ED8]/30 hover:shadow-sm transition-all duration-150 cursor-pointer"
-                onClick={() =>
-                  navigate('/customers/4602776/sales-plan/sp_1763354286877')
-                }
+                onClick={() => openPlanDetail(plan)}
               >
                 {/* Header: title + badges */}
                 <div className="flex flex-wrap items-start justify-between gap-3">

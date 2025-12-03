@@ -7,14 +7,16 @@ import {
   FaBuilding,
   FaCheckCircle,
   FaHourglassHalf,
+  FaCalendarPlus,
 } from 'react-icons/fa'
 import Card from '../ui/Card'
 import { Badge } from '../ui/Badge'
 
-export default function ActivityCard({ activity, onClick }) {
+export default function ActivityCard({ activity, onClick, onAddToOutlook }) {
   const activityDateTime = new Date(`${activity.date}T${activity.time || '00:00'}`)
   const isPast = activityDateTime < new Date()
   const isCompleted = activity.status === 'completed'
+  const outlookAdded = Boolean(activity.outlookAdded)
 
   const getStatusBadge = () => {
     if (isCompleted) {
@@ -66,7 +68,27 @@ export default function ActivityCard({ activity, onClick }) {
               </p>
             )}
           </div>
-          {getStatusBadge()}
+          <div className="flex flex-col items-end gap-1">
+            {getStatusBadge()}
+            {onAddToOutlook && (
+              <button
+                type="button"
+                className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[11px] font-medium transition ${
+                  outlookAdded
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                    : 'border-neutral-200 bg-white text-neutral-700 hover:border-[#1D4ED8] hover:text-[#1D4ED8]'
+                }`}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onAddToOutlook()
+                }}
+                aria-label={outlookAdded ? 'Sudah ditambahkan ke Outlook' : 'Tambahkan ke Outlook'}
+              >
+                <FaCalendarPlus className="w-3.5 h-3.5" />
+                <span>{outlookAdded ? 'Outlook' : 'Add to Outlook'}</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Meta row: date / time / location / type / customer */}

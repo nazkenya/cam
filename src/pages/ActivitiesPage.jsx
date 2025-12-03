@@ -8,6 +8,7 @@ import ActivityFormModal from '../components/activities/ActivityFormModal'
 import ActivityCard from '../components/activities/ActivityCard'
 import ActivityDetailModal from '../components/activities/ActivityDetailModal'
 import ActivityCalendar from '../components/activities/ActivityCalendar'
+import { FaCalendarPlus, FaCheckCircle } from 'react-icons/fa'
 
 export default function ActivitiesPage() {
   const [view, setView] = useState('calendar')
@@ -22,7 +23,7 @@ export default function ActivitiesPage() {
       id: 1,
       title: 'Meeting with PT Telkom Regional',
       type: 'Meeting',
-      date: '2025-11-10',
+      date: '2025-12-02',
       time: '10:00',
       location: 'Telkom Office Jakarta',
       topic: 'Q4 Business Review',
@@ -34,6 +35,8 @@ export default function ActivitiesPage() {
       createdBy: 'Current User',
       proof: null,
       mom: null,
+      outlookAdded: true,
+      outlookUrl: '',
     },
     {
       id: 2,
@@ -51,8 +54,54 @@ export default function ActivitiesPage() {
       createdBy: 'Current User',
       proof: null,
       mom: null,
+      outlookAdded: false,
+      outlookUrl: '',
     },
   ])
+
+  const buildOutlookDeeplink = (activity) => {
+    if (!activity) return ''
+    const date = activity.date || ''
+    const time = activity.time || '09:00'
+    const [hh, mm] = time.split(':').map((t) => parseInt(t, 10))
+    const start = new Date(`${date || ''}T${Number.isInteger(hh) ? String(hh).padStart(2, '0') : '09'}:${Number.isInteger(mm) ? String(mm).padStart(2, '0') : '00'}:00`)
+    const end = new Date(start.getTime() + 60 * 60 * 1000)
+
+    const params = new URLSearchParams({
+      path: '/calendar/action/compose',
+      rru: 'addevent',
+      subject: activity.title || 'Aktivitas Baru',
+      body: `${activity.topic ? `Topik: ${activity.topic}\n` : ''}${activity.description || 'Detail aktivitas'}\n\n(Simulated Outlook entry)`,
+      location: activity.location || '',
+      startdt: isNaN(start.getTime()) ? '' : start.toISOString(),
+      enddt: isNaN(end.getTime()) ? '' : end.toISOString(),
+    })
+
+    if (activity.invitees && activity.invitees.length > 0) {
+      params.append('attendees', activity.invitees.join(';'))
+    }
+
+    return `https://outlook.office.com/calendar/0/deeplink/compose?${params.toString()}`
+  }
+
+  const markOutlookAdded = (id) => {
+    setActivities((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, outlookAdded: true, outlookUrl: a.outlookUrl || buildOutlookDeeplink(a) } : a))
+    )
+  }
+
+  const handleAddToOutlook = (activity) => {
+    if (!activity) return
+    const url = activity.outlookUrl || buildOutlookDeeplink(activity)
+    try {
+      if (url && typeof window !== 'undefined') {
+        window.open(url, '_blank', 'noreferrer')
+      }
+    } catch {
+      // noop
+    }
+    markOutlookAdded(activity.id)
+  }
 
   // --- Helper untuk parsing tanggal aktivitas ---
   const parseActivityDate = (activity) => {
@@ -156,6 +205,8 @@ export default function ActivitiesPage() {
       createdBy: 'Current User',
       proof: null,
       mom: null,
+      outlookAdded: false,
+      outlookUrl: buildOutlookDeeplink(newActivity),
     }
     setActivities((prev) => [...prev, activity])
     setShowFormModal(false)
@@ -336,6 +387,7 @@ export default function ActivitiesPage() {
                     <ActivityCard
                       activity={activityForCard}
                       onClick={() => handleViewActivity(activityForCard)}
+                      onAddToOutlook={() => handleAddToOutlook(activityForCard)}
                     />
                   </div>
                 )
