@@ -13,6 +13,40 @@ import { ROLES, ROLE_LABELS } from '@auth/roles'
 
 import customers from '@/data/mockCustomers'
 
+const PRESEEDED_MANAGER_PLANS = [
+  {
+    id: 'sp-001',
+    title: 'SP-Q4 Retention Enterprise',
+    customerId: 'samsung',
+    customerName: 'Samsung Electronics Indonesia',
+    ownerName: 'Budi Santoso',
+    status: 'Draft',
+    approvalStatus: 'Pending',
+    dateStart: '2025-10-01',
+    dateEnd: '2025-12-31',
+    description:
+      'Fokus retaining top 10 key accounts dengan peningkatan cross-sell layanan managed service dan SD-WAN.',
+    managerComment: '',
+    managerDecisionDate: null,
+  },
+  {
+    id: 'sp-005',
+    title: 'SP-Samsung Hybrid Cloud Expansion',
+    customerId: 'samsung',
+    customerName: 'Samsung Electronics Indonesia',
+    ownerName: 'Budi Santoso',
+    status: 'Active',
+    approvalStatus: 'Approved',
+    dateStart: '2025-03-01',
+    dateEnd: '2025-12-31',
+    description:
+      'Perluas footprint hybrid cloud; fokus workload ERP, data lake, observability, dan keamanan.',
+    managerComment:
+      'Fokuskan quick win pada observability & security; siapkan showcase dashboard untuk CIO Samsung.',
+    managerDecisionDate: '2025-03-10T10:00:00.000Z',
+  },
+]
+
 const approvalTone = (status) => {
   const s = status || 'Pending'
   if (s === 'Approved') return 'bg-emerald-50 text-emerald-700 border border-emerald-200'
@@ -72,6 +106,30 @@ export default function ManagerSalesPlans() {
       } catch {
         // ignore invalid JSON
       }
+    }
+
+    // Seed manager view with preset plans if nothing is found
+    if (aggregated.length === 0) {
+      PRESEEDED_MANAGER_PLANS.forEach((plan) => {
+        aggregated.push({
+          ...plan,
+          attachment: {
+            fileName: 'Sales-Plan-Demo.pdf',
+            url: '/dummy/sales-plan-q4.pdf',
+            size: '1.2 MB',
+          },
+        })
+        const storageKey = `salesPlan_${plan.customerId}`
+        try {
+          const existing = JSON.parse(localStorage.getItem(storageKey) || '[]')
+          const merged = Array.isArray(existing)
+            ? [...existing.filter((p) => p.id !== plan.id), plan]
+            : [plan]
+          localStorage.setItem(storageKey, JSON.stringify(merged))
+        } catch {
+          // ignore storage errors
+        }
+      })
     }
 
     setPlans(aggregated)
