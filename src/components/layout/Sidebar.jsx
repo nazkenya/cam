@@ -55,6 +55,8 @@ export default function Sidebar() {
     setOpenMenus((prev) => ({ ...prev, [label]: !prev[label] }))
   }
 
+  // (no switch user modal)
+
   return (
     <nav className="fixed left-0 top-0 w-[240px] h-[100dvh] bg-[#0F162A] text-white/80 flex flex-col py-4 shrink-0 overflow-hidden z-40">
       {/* Brand Row */}

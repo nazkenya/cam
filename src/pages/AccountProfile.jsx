@@ -31,6 +31,7 @@ import BusinessModelCanvas from '../components/analysis/BusinessModelCanvas'
 import { FaExclamationTriangle } from 'react-icons/fa'
 import IndustryValueChainGapAnalysis from '../components/analysis/IndustryValueChainGapAnalysis'
 import EndCustomerProfile from '../components/analysis/EndCustomerProfile'
+import mockAccountProfiles from '../data/mockAccountProfiles'
 
 
 
@@ -68,6 +69,20 @@ export default function AccountProfile() {
   }), [])
 
   const [formData, setFormDataRaw, lastEditedForm] = useDebouncedLocalStorage(formStorageKey, initialForm)
+
+  // Prefill with hardcoded sample data only if no saved form exists yet for this account id
+  React.useEffect(() => {
+    try {
+      const existing = localStorage.getItem(formStorageKey)
+      if (existing) return
+      const sample = (mockAccountProfiles && (mockAccountProfiles[id] || mockAccountProfiles.default)) || null
+      if (!sample) return
+      setFormDataRaw(prev => ({ ...prev, ...sample }))
+    } catch {
+      // ignore storage errors
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, formStorageKey])
   // migrate legacy PIC fields (one-time)
   React.useEffect(() => {
     if (formData.pics.length === 0 && (formData.picName || formData.picTitle || formData.picPhone || formData.picEmail)) {
@@ -614,7 +629,7 @@ const history = React.useMemo(() => {
       const parsed = JSON.parse(raw)
       if (Array.isArray(parsed) && parsed.length > 0) return parsed
     }
-  } catch {}
+  } catch (e) { void e }
 
   // Dummy fallback
   return [
