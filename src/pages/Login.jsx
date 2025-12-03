@@ -16,9 +16,9 @@ export default function Login() {
 
   // Map default homepage per role
   const DEFAULT_HOME_BY_ROLE = {
-    [ROLES.sales]: '/',
+    [ROLES.sales]: '/manager',
     [ROLES.manager]: '/manager',
-    [ROLES.admin]: '/executive',
+    [ROLES.admin]: '/',
   }
 
   async function handleSubmit(e) {

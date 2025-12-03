@@ -28,8 +28,9 @@ export const routes = [
   { path: '/403', element: <NotAuthorized />, public: true },
 
   // Protected routes
-  { path: '/', element: <AccountManagerDashboard />, roles: [ROLES.sales] },
-  // Fallback homepage for other roles
+  { path: '/', element: <ExecutivePerformanceDashboard />, roles: [ROLES.admin] },
+  // { path: '/region', element: <ExecutiveRegionPerformance />, roles: [ROLES.admin] },
+
   { path: '/customers', element: <CustomersPage />, roles: [ROLES.admin, ROLES.sales, ROLES.manager] },
   { path: '/customers/:id', element: <CustomerDetail />, roles: [ROLES.admin, ROLES.sales, ROLES.manager] },
   { path: '/customers/:id/sales-plan/:planId', element: <SalesPlanDetail />, roles: [ROLES.admin, ROLES.sales, ROLES.manager] },
@@ -41,11 +42,11 @@ export const routes = [
   { path: '/ecrm-workspace', element: <EcrmWorkspace />, roles: [ROLES.admin] },
   { path: '/ecrm-workspace/validation', element: <ValidationPage />, roles: [ROLES.admin] },
   // Manager specific tracking dashboard
-  { path: '/manager', element: <ManagerPerformanceDashboard />, roles: [ROLES.manager, ROLES.admin] },
+  // { path: '/manager', element: <ManagerPerformanceDashboard />, roles: [ROLES.manager, ROLES.admin] },
   { path: '/manager/performance', element: <ManagerPerformanceDashboard />, roles: [ROLES.manager, ROLES.admin] },
   { path: '/manager/account-managers', element: <AccountManagers />, roles: [ROLES.manager, ROLES.admin] },
   { path: '/manager/sales-plans', element: <ManagerSalesPlans />, roles: [ROLES.manager, ROLES.admin] },
   { path: '/sales-plans', element: <SalesPlans />, roles: [ROLES.sales] },
-  { path: '/executive', element: <ExecutivePerformanceDashboard />, roles: [ROLES.admin] },
+  // { path: '/executive', element: <ExecutivePerformanceDashboard />, roles: [ROLES.admin] },
   { path: '/executive/region', element: <ExecutiveRegionPerformance />, roles: [ROLES.admin] },
 ]
